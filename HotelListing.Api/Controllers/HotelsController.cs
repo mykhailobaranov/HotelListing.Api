@@ -1,5 +1,5 @@
 ﻿using HotelListing.Api.Data;
-using HotelListing.Api.Models;
+using HotelListing.Api.Models.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

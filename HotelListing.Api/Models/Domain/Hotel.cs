@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.Metrics;
 
-namespace HotelListing.Api.Models;
+namespace HotelListing.Api.Models.Domain;
 
 public class Hotel
 {
