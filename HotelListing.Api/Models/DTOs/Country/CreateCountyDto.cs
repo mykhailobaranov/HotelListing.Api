@@ -2,7 +2,7 @@
 
 namespace HotelListing.Api.Models.DTOs.Country;
 
-public class CreateCountyDto
+public class CreateCountryDto
 {
     [Required]
     [MaxLength(50)]
