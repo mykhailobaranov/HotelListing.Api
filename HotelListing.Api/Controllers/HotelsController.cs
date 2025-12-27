@@ -91,7 +91,7 @@ public class HotelsController(HotelListingDbContext context) : ControllerBase
     // POST: api/Hotels
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<Hotel>> PostHotel(CreateHotelDto hotelDto)
+    public async Task<ActionResult<GetHotelDto>> PostHotel(CreateHotelDto hotelDto)
     {
         var hotel = new Hotel
         {
@@ -104,7 +104,17 @@ public class HotelsController(HotelListingDbContext context) : ControllerBase
         context.Hotels.Add(hotel);
         await context.SaveChangesAsync();
 
-        return CreatedAtAction("GetHotel", new { id = hotel.Id }, hotel);
+        await context.Entry(hotel).Reference(x => x.Country).LoadAsync();
+
+        var createdHotelDto = new GetHotelDto(
+            hotel.Id,
+            hotel.Name,
+            hotel.Address,
+            hotel.Rating,
+            hotel.Country.Name
+            );
+
+        return CreatedAtAction("GetHotel", new { id = hotel.Id }, createdHotelDto);
     }
 
     // DELETE: api/Hotels/5
