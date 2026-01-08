@@ -6,44 +6,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.Api.Repositories.Implementation
 {
-    public class HotelsRepository(HotelListingDbContext db) : IHotelsRepository
+    public class HotelsRepository : GenericRepository<Hotel>, IHotelsRepository
     {
-        public async Task AddAsync(Hotel entity)
-        {
-            await db.Hotels.AddAsync(entity);
-            await db.SaveChangesAsync();
-        }
+        private readonly HotelListingDbContext _db;
 
-        public async Task DeleteAsync(int id)
+        public HotelsRepository(HotelListingDbContext db) : base(db)
         {
-            var hotel = await db.Hotels.FindAsync(id);
-            db.Hotels.Remove(hotel!);
-            await db.SaveChangesAsync();
-        }
-
-        public async Task<IEnumerable<Hotel>> GetAllAsync()
-        {
-            return await db.Hotels.ToListAsync();
-        }
-
-        public async Task<Hotel?> GetByIdAsync(int id)
-        {
-            return await db.Hotels.FindAsync(id);
-        }
-
-        public async Task UpdateAsync(Hotel entity)
-        {
-            db.Hotels.Update(entity);
-            await db.SaveChangesAsync();
-        }
-        public async Task<bool> Exists(int id)
-        {
-            return await db.Hotels.FindAsync(id) != null;
+            _db = db;
         }
 
         public async Task<Hotel?> GetHotelDetails(int id)
         {
-            return await db.Hotels
+            return await _db.Hotels
                 .Include(q => q.Country)
                 .FirstOrDefaultAsync(q => q.Id == id);
         }
