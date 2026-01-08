@@ -2,6 +2,8 @@
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs;
 using HotelListing.Api.Models.DTOs.Hotel;
+using HotelListing.Api.Repositories.Implementation;
+using HotelListing.Api.Repositories.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,40 +11,46 @@ namespace HotelListing.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class HotelsController(HotelListingDbContext context) : ControllerBase
+public class HotelsController(IHotelsRepository repository) : ControllerBase
 {
 
     // GET: api/Hotels
     [HttpGet]
     public async Task<ActionResult<IEnumerable<GetHotelsDto>>> GetHotels()
     {
-        var hotels = await context.Hotels
-            .Select(h => new GetHotelsDto(h.Id, h.Name, h.Address, h.Rating, h.CountryId))
-            .ToListAsync();
+        var hotels = await repository.GetAllAsync();
 
-        return Ok(hotels);
+        var response = hotels.Select(h => new GetHotelsDto(
+                h.Id,
+                h.Name,
+                h.Address,
+                h.Rating,
+                h.CountryId
+            )).ToList();
+
+        return Ok(response);
     }
 
     // GET: api/Hotels/5
     [HttpGet("{id}")]
     public async Task<ActionResult<GetHotelDto>> GetHotel(int id)
     {
-        var hotel = await context.Hotels
-            .Where(h => h.Id == id)
-            .Select(h => new GetHotelDto(
-                h.Id,
-                h.Name,
-                h.Address,
-                h.Rating,
-                h.Country!.Name))
-            .FirstOrDefaultAsync();
+        var hotel = await repository.GetHotelDetails(id);
 
         if (hotel == null)
         {
             return NotFound();
         }
 
-        return Ok(hotel);
+        var response = new GetHotelDto(
+            hotel.Id,
+            hotel.Name,
+            hotel.Address,
+            hotel.Rating,
+            hotel.Country!.Name
+            );
+
+        return Ok(response);
     }
 
     // PUT: api/Hotels/5
@@ -55,9 +63,9 @@ public class HotelsController(HotelListingDbContext context) : ControllerBase
             return BadRequest();
         }
 
-        var hotel = await context.Hotels.FindAsync(id);
+        var hotel = await repository.GetByIdAsync(id);
 
-        if(hotel == null)
+        if (hotel == null)
         {
             return NotFound();
         }
@@ -67,15 +75,13 @@ public class HotelsController(HotelListingDbContext context) : ControllerBase
         hotel.Rating = hotelDto.Rating;
         hotel.CountryId = hotelDto.CountryId;
 
-        context.Entry(hotel).State = EntityState.Modified;
-
         try
         {
-            await context.SaveChangesAsync();
+            await repository.UpdateAsync(hotel);
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!HotelExists(id))
+            if (!await repository.Exists(id))
             {
                 return NotFound();
             }
@@ -101,17 +107,14 @@ public class HotelsController(HotelListingDbContext context) : ControllerBase
             CountryId = hotelDto.CountryId,
         };
 
-        context.Hotels.Add(hotel);
-        await context.SaveChangesAsync();
-
-        await context.Entry(hotel).Reference(x => x.Country).LoadAsync();
+        await repository.AddAsync(hotel);
 
         var createdHotelDto = new GetHotelDto(
             hotel.Id,
             hotel.Name,
             hotel.Address,
             hotel.Rating,
-            hotel.Country.Name
+            hotel.CountryId.ToString()
             );
 
         return CreatedAtAction("GetHotel", new { id = hotel.Id }, createdHotelDto);
@@ -121,20 +124,15 @@ public class HotelsController(HotelListingDbContext context) : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteHotel(int id)
     {
-        var hotel = await context.Hotels.FindAsync(id);
+        var hotel = await repository.GetByIdAsync(id);
+
         if (hotel == null)
         {
             return NotFound();
         }
 
-        context.Hotels.Remove(hotel);
-        await context.SaveChangesAsync();
+        await repository.DeleteAsync(id);
 
         return NoContent();
-    }
-
-    private bool HotelExists(int id)
-    {
-        return context.Hotels.Any(e => e.Id == id);
     }
 }
