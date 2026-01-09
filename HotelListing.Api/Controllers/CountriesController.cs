@@ -5,12 +5,13 @@ using HotelListing.Api.Models.DTOs;
 using HotelListing.Api.Models.DTOs.Country;
 using HotelListing.Api.Models.DTOs.Hotel;
 using HotelListing.Api.Repositories.Interface;
+using AutoMapper;
 
 namespace HotelListing.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class CountriesController(ICountriesRepository repository) : ControllerBase
+public class CountriesController(ICountriesRepository repository, IMapper mapper) : ControllerBase
 {
     // GET: api/Countries
     [HttpGet]
@@ -18,11 +19,7 @@ public class CountriesController(ICountriesRepository repository) : ControllerBa
     {
         var countries = await repository.GetAllAsync();
 
-        var response = countries.Select(c => new GetCountriesDto(
-            c.CountryId,
-            c.Name,
-            c.ShortName
-            )).ToList();
+        var response = mapper.Map<List<GetCountriesDto>>(countries);
 
         return Ok(response);
     }
@@ -38,16 +35,7 @@ public class CountriesController(ICountriesRepository repository) : ControllerBa
             return NotFound();
         }
 
-        var response = new GetCountryDto(
-            country.CountryId,
-            country.Name,
-            country.ShortName,
-            country.Hotels.Select(h => new GetHotelSlimDto(
-                    h.Id,
-                    h.Name,
-                    h.Address,
-                    h.Rating
-                )).ToList());
+        var response = mapper.Map<GetCountryDto>(country);
 
         return Ok(response);
     }
@@ -57,7 +45,7 @@ public class CountriesController(ICountriesRepository repository) : ControllerBa
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCountry(int id, UpdateCountryDto countryDto)
     {
-        if (id != countryDto.Id)
+        if (id != countryDto.CountryId)
         {
             return BadRequest();
         }
@@ -69,8 +57,7 @@ public class CountriesController(ICountriesRepository repository) : ControllerBa
             return NotFound();
         }
 
-        country.ShortName = countryDto.ShortName;
-        country.Name = countryDto.Name;
+        mapper.Map(countryDto, country);
 
         try
         {
@@ -96,20 +83,11 @@ public class CountriesController(ICountriesRepository repository) : ControllerBa
     [HttpPost]
     public async Task<ActionResult<GetCountryDto>> PostCountry(CreateCountryDto countryDto)
     {
-        var country = new Country
-        {
-            ShortName = countryDto.ShortName,
-            Name = countryDto.Name,
-        };
+        var country = mapper.Map<Country>(countryDto);
 
         await repository.AddAsync(country);
 
-        var createdCountryDto = new GetCountryDto(
-            country.CountryId,
-            country.Name,
-            country.ShortName,
-            []
-            );
+        var createdCountryDto = mapper.Map<GetCountryDto>(country);
 
         return CreatedAtAction("GetCountry", new { id = country.CountryId }, createdCountryDto);
     }
@@ -119,6 +97,7 @@ public class CountriesController(ICountriesRepository repository) : ControllerBa
     public async Task<IActionResult> DeleteCountry(int id)
     {
         var country = await repository.GetByIdAsync(id);
+
         if (country == null)
         {
             return NotFound();

@@ -1,4 +1,5 @@
-﻿using HotelListing.Api.Data;
+﻿using AutoMapper;
+using HotelListing.Api.Data;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs;
 using HotelListing.Api.Models.DTOs.Hotel;
@@ -11,7 +12,7 @@ namespace HotelListing.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class HotelsController(IHotelsRepository repository) : ControllerBase
+public class HotelsController(IHotelsRepository repository, IMapper mapper) : ControllerBase
 {
 
     // GET: api/Hotels
@@ -20,13 +21,7 @@ public class HotelsController(IHotelsRepository repository) : ControllerBase
     {
         var hotels = await repository.GetAllAsync();
 
-        var response = hotels.Select(h => new GetHotelsDto(
-                h.Id,
-                h.Name,
-                h.Address,
-                h.Rating,
-                h.CountryId
-            )).ToList();
+        var response = mapper.Map<List<GetHotelsDto>>(hotels);
 
         return Ok(response);
     }
@@ -42,13 +37,7 @@ public class HotelsController(IHotelsRepository repository) : ControllerBase
             return NotFound();
         }
 
-        var response = new GetHotelDto(
-            hotel.Id,
-            hotel.Name,
-            hotel.Address,
-            hotel.Rating,
-            hotel.Country!.Name
-            );
+        var response = mapper.Map<GetHotelDto>(hotel);
 
         return Ok(response);
     }
@@ -70,10 +59,7 @@ public class HotelsController(IHotelsRepository repository) : ControllerBase
             return NotFound();
         }
 
-        hotel.Name = hotelDto.Name;
-        hotel.Address = hotelDto.Address;
-        hotel.Rating = hotelDto.Rating;
-        hotel.CountryId = hotelDto.CountryId;
+        mapper.Map(hotelDto, hotel);
 
         try
         {
@@ -99,23 +85,13 @@ public class HotelsController(IHotelsRepository repository) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<GetHotelDto>> PostHotel(CreateHotelDto hotelDto)
     {
-        var hotel = new Hotel
-        {
-            Name = hotelDto.Name,
-            Address = hotelDto.Address,
-            Rating = hotelDto.Rating,
-            CountryId = hotelDto.CountryId,
-        };
+        var hotel = mapper.Map<Hotel>(hotelDto);
 
         await repository.AddAsync(hotel);
 
-        var createdHotelDto = new GetHotelDto(
-            hotel.Id,
-            hotel.Name,
-            hotel.Address,
-            hotel.Rating,
-            hotel.CountryId.ToString()
-            );
+        var fullHotel = await repository.GetHotelDetails(hotel.Id);
+
+        var createdHotelDto = mapper.Map<GetHotelDto>(fullHotel);
 
         return CreatedAtAction("GetHotel", new { id = hotel.Id }, createdHotelDto);
     }
