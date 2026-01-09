@@ -1,25 +1,18 @@
-﻿﻿using HotelListing.Api.Data;
+﻿using HotelListing.Api.Models.DTOs.Country;
+using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using HotelListing.Api.Models.DTOs;
-using HotelListing.Api.Models.DTOs.Country;
-using HotelListing.Api.Models.DTOs.Hotel;
-using HotelListing.Api.Repositories.Interface;
-using AutoMapper;
 
 namespace HotelListing.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class CountriesController(ICountriesRepository repository, IMapper mapper) : ControllerBase
+public class CountriesController(ICountriesService service) : ControllerBase
 {
     // GET: api/Countries
     [HttpGet]
     public async Task<ActionResult<IEnumerable<GetCountriesDto>>> GetCountries()
     {
-        var countries = await repository.GetAllAsync();
-
-        var response = mapper.Map<List<GetCountriesDto>>(countries);
+        var response = await service.GetCountriesAsync();
 
         return Ok(response);
     }
@@ -28,20 +21,26 @@ public class CountriesController(ICountriesRepository repository, IMapper mapper
     [HttpGet("{id}")]
     public async Task<ActionResult<GetCountryDto>> GetCountry(int id)
     {
-        var country = await repository.GetCountryDetails(id);
+        var response = await service.GetCountryAsync(id);
 
-        if (country == null)
+        if (response == null)
         {
             return NotFound();
         }
 
-        var response = mapper.Map<GetCountryDto>(country);
-
         return Ok(response);
     }
 
+    // POST: api/Countries
+    [HttpPost]
+    public async Task<ActionResult<GetCountryDto>> PostCountry(CreateCountryDto countryDto)
+    {
+        var response = await service.CreateCountryAsync(countryDto);
+
+        return CreatedAtAction("GetCountry", new { id = response.CountryId }, response);
+    }
+
     // PUT: api/Countries/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCountry(int id, UpdateCountryDto countryDto)
     {
@@ -50,60 +49,26 @@ public class CountriesController(ICountriesRepository repository, IMapper mapper
             return BadRequest();
         }
 
-        var country = await repository.GetByIdAsync(id);
+        var isUpdated = await service.UpdateCountryAsync(id, countryDto);
 
-        if (country == null)
+        if (!isUpdated)
         {
             return NotFound();
         }
 
-        mapper.Map(countryDto, country);
-
-        try
-        {
-            await repository.UpdateAsync(country);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!await repository.Exists(id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
-        }
-
         return NoContent();
-    }
-
-    // POST: api/Countries
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-    [HttpPost]
-    public async Task<ActionResult<GetCountryDto>> PostCountry(CreateCountryDto countryDto)
-    {
-        var country = mapper.Map<Country>(countryDto);
-
-        await repository.AddAsync(country);
-
-        var createdCountryDto = mapper.Map<GetCountryDto>(country);
-
-        return CreatedAtAction("GetCountry", new { id = country.CountryId }, createdCountryDto);
     }
 
     // DELETE: api/Countries/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCountry(int id)
     {
-        var country = await repository.GetByIdAsync(id);
+        var isDeleted = await service.DeleteCountryAsync(id);
 
-        if (country == null)
+        if (!isDeleted)
         {
             return NotFound();
         }
-
-        await repository.DeleteAsync(id);
 
         return NoContent();
     }

@@ -2,6 +2,7 @@ using HotelListing.Api.Data;
 using HotelListing.Api.MappingProfiles;
 using HotelListing.Api.Repositories.Implementation;
 using HotelListing.Api.Repositories.Interface;
+using HotelListing.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
 builder.Services.AddScoped<IHotelsRepository, HotelsRepository>();
+builder.Services.AddScoped<IHotelsService, HotelsService>();
+builder.Services.AddScoped<ICountriesService, CountriesService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
