@@ -1,6 +1,7 @@
 ﻿using HotelListing.Api.Data;
 using HotelListing.Api.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace HotelListing.Api.Repositories.Implementation
 {
@@ -38,6 +39,11 @@ namespace HotelListing.Api.Repositories.Implementation
         public async Task<bool> Exists(int id)
         {
             return await GetByIdAsync(id) != null;
+        }
+
+        public async Task<bool> ExistsAsync(Expression<Func<T,bool>> predicate)
+        {
+            return await db.Set<T>().AnyAsync(predicate);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using HotelListing.Api.Models;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Hotel;
 using HotelListing.Api.Repositories.Interface;
@@ -6,64 +7,85 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.Api.Services
 {
-    public class HotelsService(IHotelsRepository repository, IMapper mapper) : IHotelsService
+    public class HotelsService(
+        IHotelsRepository hotelsRepository,
+        ICountriesRepository countriesRepository,
+        IMapper mapper) : IHotelsService
     {
-        public async Task<IEnumerable<GetHotelsDto>> GetHotelsAsync()
+        public async Task<Result<IEnumerable<GetHotelsDto>>> GetHotelsAsync()
         {
-            var hotels = await repository.GetAllAsync();
+            var hotels = await hotelsRepository.GetAllAsync();
 
-            var response = mapper.Map<List<GetHotelsDto>>(hotels);
+            var response = mapper.Map<IEnumerable<GetHotelsDto>>(hotels);
 
-            return response;
-        }
+            return Result<IEnumerable<GetHotelsDto>>.Success(response);
+        }   
 
-        public async Task<GetHotelDto?> GetHotelAsync(int id)
+        public async Task<Result<GetHotelDto>> GetHotelAsync(int id)
         {
-            var hotel = await repository.GetHotelDetails(id);
+            var hotel = await hotelsRepository.GetHotelDetails(id);
 
             if (hotel == null)
             {
-                return null;
+                return Result<GetHotelDto>.NotFound();
             }
 
             var response = mapper.Map<GetHotelDto>(hotel);
 
-            return response;
+            return Result<GetHotelDto>.Success(response);
         }
 
-        public async Task<GetHotelDto> CreateHotelAsync(CreateHotelDto hotelDto)
+        public async Task<Result<GetHotelDto>> CreateHotelAsync(CreateHotelDto hotelDto)
         {
+            var isExist = await hotelsRepository.
+                ExistsAsync(h => h.Name == hotelDto.Name &&
+                            h.CountryId == hotelDto.CountryId);
+
+            if (isExist)
+            {
+                return Result<GetHotelDto>.Conflict($"Hotel with name '{hotelDto.Name}' already exists in this country.");
+            }
+
+            var country = await countriesRepository.GetByIdAsync(hotelDto.CountryId);
+
+            if(country == null)
+            {
+                return Result<GetHotelDto>.NotFound($"Country with id {hotelDto.CountryId} does not exist.");
+            }
+
             var hotel = mapper.Map<Hotel>(hotelDto);
-
-            await repository.AddAsync(hotel);
-
-            var fullHotel = await repository.GetHotelDetails(hotel.Id);
-
+            await hotelsRepository.AddAsync(hotel);
+            var fullHotel = await hotelsRepository.GetHotelDetails(hotel.Id);
             var createdHotelDto = mapper.Map<GetHotelDto>(fullHotel);
 
-            return createdHotelDto;
+            return Result<GetHotelDto>.Success(createdHotelDto);
         }
 
-        public async Task<bool> UpdateHotelAsync(int id, UpdateHotelDto hotelDto)
+        public async Task<Result> UpdateHotelAsync(int id, UpdateHotelDto hotelDto)
         {
-            var hotel = await repository.GetByIdAsync(id);
+            if (id != hotelDto.Id)
+            {
+                return Result.BadRequest($"Route Id: {id} does not match Body Id: {hotelDto.Id}.");
+            }
+
+            var hotel = await hotelsRepository.GetByIdAsync(id);
 
             if (hotel == null)
             {
-                return false;
+                return Result.NotFound();
             }
 
             mapper.Map(hotelDto, hotel);
 
             try
             {
-                await repository.UpdateAsync(hotel);
+                await hotelsRepository.UpdateAsync(hotel);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!await repository.Exists(id))
+                if (!await hotelsRepository.Exists(id))
                 {
-                    return false;
+                    return Result.Conflict($"Hotel with id {id} no longer exists.");
                 }
                 else
                 {
@@ -71,21 +93,21 @@ namespace HotelListing.Api.Services
                 }
             }
 
-            return true;
+            return Result.Success();
         }
 
-        public async Task<bool> DeleteHotelAsync(int id)
+        public async Task<Result> DeleteHotelAsync(int id)
         {
-            var hotel = await repository.GetByIdAsync(id);
+            var hotel = await hotelsRepository.GetByIdAsync(id);
 
             if (hotel == null)
             {
-                return false;
+                return Result.NotFound();
             }
 
-            await repository.DeleteAsync(id);
+            await hotelsRepository.DeleteAsync(id);
 
-            return true;
+            return Result.Success();
         }      
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using HotelListing.Api.Models;
 using HotelListing.Api.Models.DTOs.Country;
 using HotelListing.Api.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -7,47 +8,59 @@ namespace HotelListing.Api.Services
 {
     public class CountriesService(ICountriesRepository repository, IMapper mapper) : ICountriesService
     {
-        public async Task<IEnumerable<GetCountriesDto>> GetCountriesAsync()
+        public async Task<Result<IEnumerable<GetCountriesDto>>> GetCountriesAsync()
         {
             var countries = await repository.GetAllAsync();
 
             var response = mapper.Map<List<GetCountriesDto>>(countries);
 
-            return response;
+            return Result<IEnumerable<GetCountriesDto>>.Success(response);
         }
 
-        public async Task<GetCountryDto?> GetCountryAsync(int id)
+        public async Task<Result<GetCountryDto>> GetCountryAsync(int id)
         {
             var country = await repository.GetCountryDetails(id);
 
             if (country == null)
             {
-                return null;
+                return Result<GetCountryDto>.NotFound();
             }
 
             var response = mapper.Map<GetCountryDto>(country);
 
-            return response;
+            return Result<GetCountryDto>.Success(response);
         }
 
-        public async Task<GetCountryDto> CreateCountryAsync(CreateCountryDto countryDto)
+        public async Task<Result<GetCountryDto>> CreateCountryAsync(CreateCountryDto countryDto)
         {
+            var isExist = await repository.ExistsAsync(c => c.Name == countryDto.Name);
+
+            if (isExist)
+            {
+                return Result<GetCountryDto>.Conflict($"Country with name '{countryDto.Name}' already exists.");
+            }
+
             var country = mapper.Map<Country>(countryDto);
 
             await repository.AddAsync(country);
 
             var createdCountryDto = mapper.Map<GetCountryDto>(country);
 
-            return createdCountryDto;
+            return Result<GetCountryDto>.Success(createdCountryDto);
         }
 
-        public async Task<bool> UpdateCountryAsync(int id, UpdateCountryDto countryDto)
+        public async Task<Result> UpdateCountryAsync(int id, UpdateCountryDto countryDto)
         {
+            if (id != countryDto.CountryId)
+            {
+                return Result.BadRequest($"Route Id: {id} does not match Body Id: {countryDto.CountryId}.");
+            }
+
             var country = await repository.GetByIdAsync(id);
 
             if (country == null)
             {
-                return false;
+                return Result.NotFound($"Country with id {id} no longer exists.");
             }
 
             mapper.Map(countryDto, country);
@@ -60,7 +73,7 @@ namespace HotelListing.Api.Services
             {
                 if (!await repository.Exists(id))
                 {
-                    return false;
+                    return Result.Conflict($"Country with id {id} no longer exists.");
                 }
                 else
                 {
@@ -68,21 +81,21 @@ namespace HotelListing.Api.Services
                 }
             }
 
-            return true;
+            return Result.Success();
         }
 
-        public async Task<bool> DeleteCountryAsync(int id)
+        public async Task<Result> DeleteCountryAsync(int id)
         {
             var country = await repository.GetByIdAsync(id);
 
             if (country == null)
             {
-                return false;
+                return Result.NotFound();
             }
 
             await repository.DeleteAsync(id);
 
-            return true;
+            return Result.Success();
         }
     }
 }
