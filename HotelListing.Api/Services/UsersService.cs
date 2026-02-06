@@ -2,6 +2,10 @@
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Auth;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace HotelListing.Api.Services;
 
@@ -70,7 +74,35 @@ public class UsersService(
 
     private async Task<string> GenerateToken(ApplicationUser user)
     {
-        //JWT Token generation to be added
-        return "token";
+        // Set basic user claims
+        var claims = new List<Claim>
+        {
+            new (JwtRegisteredClaimNames.Sub, user.Id),
+            new (JwtRegisteredClaimNames.Email, user.Email),
+            new (JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new (JwtRegisteredClaimNames.Name, user.FullName)
+        };
+
+        // Set user role claims
+        var roles = await userManager.GetRolesAsync(user);
+        var roleClaims = roles.Select(x => new Claim(ClaimTypes.Role, x)).ToList();
+
+        claims = claims.Union(roleClaims).ToList();
+
+        // Set JWT Key credentials
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtSettings:Key"] ?? string.Empty));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        // Create an encoded token
+        var token = new JwtSecurityToken(
+            issuer: configuration["JwtSettings:Issuer"],
+            audience: configuration["JwtSettings:Audience"],
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(Convert.ToInt32(configuration["JwtSettings:DurationInMinutes"])),
+            signingCredentials: credentials
+            );
+
+        // Return token value
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
