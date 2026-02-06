@@ -27,6 +27,7 @@ builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
 builder.Services.AddScoped<IHotelsRepository, HotelsRepository>();
 builder.Services.AddScoped<IHotelsService, HotelsService>();
 builder.Services.AddScoped<ICountriesService, CountriesService>();
+builder.Services.AddScoped<IUsersService, UsersService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
