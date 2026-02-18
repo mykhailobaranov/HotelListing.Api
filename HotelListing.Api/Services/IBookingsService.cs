@@ -1,0 +1,12 @@
+﻿using HotelListing.Api.Models;
+using HotelListing.Api.Models.DTOs.Booking;
+
+namespace HotelListing.Api.Services;
+
+public interface IBookingsService
+{
+    Task<Result<IEnumerable<GetBookingDto>>> GetBookingsForHotelAsync(int hotelId);
+    Task<Result<GetBookingDto>> CreateBookingAsync(int hotelId, CreateBookingDto createDto);
+    Task<Result<GetBookingDto>> UpdateBookingAsync(int hotelId, int bookingId, UpdateBookingDto updateDto);
+    Task<Result> DeleteBookingAsync(int hotelId, int bookingId);
+}

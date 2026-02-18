@@ -45,14 +45,17 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorization();
-
 builder.Services.AddOpenApi();
+
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
 builder.Services.AddScoped<IHotelsRepository, HotelsRepository>();
+builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
+builder.Services.AddScoped<IBookingsRepository, BookingRepository>();
 builder.Services.AddScoped<IHotelsService, HotelsService>();
 builder.Services.AddScoped<ICountriesService, CountriesService>();
+builder.Services.AddScoped<IBookingsService, BookingService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
 
 builder.Services.AddAutoMapper(cfg =>
