@@ -11,4 +11,4 @@ public record GetBookingDto(
     string Status,
     DateTime CreatedAtUtc,
     DateTime? UpdatedAtUtc
-    ); 
+    );

@@ -30,7 +30,7 @@ public class CountriesController(ICountriesService service) : BaseApiController
     {
         var result = await service.CreateCountryAsync(countryDto);
 
-        if(result.IsSuccess)
+        if (result.IsSuccess)
         {
             return CreatedAtAction("GetCountry", new { id = result.Value!.CountryId }, result.Value);
         }

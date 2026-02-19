@@ -1,7 +1,6 @@
 ﻿using HotelListing.Api.Models.DTOs.Auth;
 using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelListing.Api.Controllers;

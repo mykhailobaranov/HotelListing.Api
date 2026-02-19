@@ -1,5 +1,4 @@
 ﻿using HotelListing.Api.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelListing.Api.Controllers;
@@ -32,7 +31,7 @@ public class BaseApiController : ControllerBase
     {
         return errorType switch
         {
-            ErrorType.NotFound => NotFound(new { message = error }), 
+            ErrorType.NotFound => NotFound(new { message = error }),
             ErrorType.BadRequest => BadRequest(new { message = error }),
             ErrorType.Conflict => Conflict(new { message = error }),
             _ => StatusCode(500, new { message = error })

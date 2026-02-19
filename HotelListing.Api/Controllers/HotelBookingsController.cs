@@ -1,8 +1,6 @@
-﻿using HotelListing.Api.Models.Domain;
-using HotelListing.Api.Models.DTOs.Booking;
+﻿using HotelListing.Api.Models.DTOs.Booking;
 using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelListing.Api.Controllers;
@@ -29,7 +27,7 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
     [HttpPut("{bookingId:int}")]
     public async Task<ActionResult<GetBookingDto>> UpdateBooking([FromRoute] int hotelId, [FromRoute] int bookingId, [FromBody] UpdateBookingDto updateDto)
     {
-        var result = await service.UpdateBookingAsync(hotelId ,bookingId, updateDto);
+        var result = await service.UpdateBookingAsync(hotelId, bookingId, updateDto);
         return HandleResult(result);
     }
 

@@ -2,7 +2,6 @@
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Country;
 using HotelListing.Api.Models.DTOs.Hotel;
-using Microsoft.AspNetCore.Razor.Language.Intermediate;
 
 namespace HotelListing.Api.MappingProfiles;
 

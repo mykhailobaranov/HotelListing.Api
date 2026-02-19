@@ -9,7 +9,7 @@ public record CreateHotelDto
     [Required]
     [MaxLength(150)]
     public required string Address { get; init; }
-    [Range(0,5)]
+    [Range(0, 5)]
     public double Rating { get; init; }
     [Required]
     public int CountryId { get; init; }
