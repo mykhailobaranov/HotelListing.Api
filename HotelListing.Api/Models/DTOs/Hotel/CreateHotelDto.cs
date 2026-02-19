@@ -12,5 +12,8 @@ public record CreateHotelDto
     [Range(0, 5)]
     public double Rating { get; init; }
     [Required]
+    [Range(0, 100000)]
+    public decimal PerNightRate { get; init; }
+    [Required]
     public int CountryId { get; init; }
 }

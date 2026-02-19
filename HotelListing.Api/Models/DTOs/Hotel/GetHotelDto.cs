@@ -5,6 +5,7 @@ public record GetHotelDto
     public string? Name { get; init; }
     public string? Address { get; init; }
     public double Rating { get; init; }
+    public decimal PerNightRate { get; init; }
     public string? Country { get; init; }
 }
 
@@ -12,5 +13,6 @@ public record GetHotelSlimDto(
     int Id,
     string Name,
     string Address,
-    double Rating
+    double Rating,
+    decimal PerNightRate
     );
