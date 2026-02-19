@@ -2,7 +2,7 @@
 
 namespace HotelListing.Api.Models.DTOs.Country;
 
-public class UpdateCountryDto : CreateCountryDto
+public record UpdateCountryDto : CreateCountryDto
 {
     [Required]
     public int CountryId { get; set; }

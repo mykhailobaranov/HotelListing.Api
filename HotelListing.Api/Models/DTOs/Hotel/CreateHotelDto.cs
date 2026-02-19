@@ -2,15 +2,15 @@
 
 namespace HotelListing.Api.Models.DTOs.Hotel;
 
-public class CreateHotelDto
+public record CreateHotelDto
 {
     [Required]
-    public required string Name { get; set; }
+    public required string Name { get; init; }
     [Required]
     [MaxLength(150)]
-    public required string Address { get; set; }
+    public required string Address { get; init; }
     [Range(0,5)]
-    public double Rating { get; set; }
+    public double Rating { get; init; }
     [Required]
-    public int CountryId { get; set; }
+    public int CountryId { get; init; }
 }

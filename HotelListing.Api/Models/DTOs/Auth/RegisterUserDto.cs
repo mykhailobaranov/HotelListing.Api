@@ -1,21 +1,20 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HotelListing.Api.Models.DTOs.Auth
+namespace HotelListing.Api.Models.DTOs.Auth;
+
+public record RegisterUserDto
 {
-    public class RegisterUserDto
-    {
-        [Required, EmailAddress]
-        public string Email { get; set; } = string.Empty;
+    [Required, EmailAddress]
+    public string Email { get; init; } = string.Empty;
 
-        [Required, MinLength(8)]
-        public string Password { get; set; } = string.Empty;
+    [Required, MinLength(8)]
+    public string Password { get; init; } = string.Empty;
 
-        [Required, MaxLength(50)]
-        public string FirstName { get; set; } = string.Empty;
+    [Required, MaxLength(50)]
+    public string FirstName { get; init; } = string.Empty;
 
-        [Required, MaxLength(50)]
-        public string LastName { get; set; } = string.Empty;
+    [Required, MaxLength(50)]
+    public string LastName { get; init; } = string.Empty;
 
-        public string Role { get; set; } = "User";
-    }
+    public string Role { get; init; } = "User";
 }

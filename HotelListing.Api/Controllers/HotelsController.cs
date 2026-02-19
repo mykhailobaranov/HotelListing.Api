@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HotelListing.Api.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/hotels")]
 [ApiController]
 [Authorize]
 public class HotelsController(IHotelsService service) : BaseApiController

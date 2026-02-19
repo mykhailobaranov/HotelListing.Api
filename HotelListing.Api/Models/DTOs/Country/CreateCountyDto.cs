@@ -2,12 +2,12 @@
 
 namespace HotelListing.Api.Models.DTOs.Country;
 
-public class CreateCountryDto
+public record CreateCountryDto
 {
     [Required]
     [MaxLength(50)]
-    public required string Name { get; set; }
+    public required string Name { get; init; }
     [Required]
     [MaxLength(3)]
-    public required string ShortName { get; set; }
+    public required string ShortName { get; init; }
 }

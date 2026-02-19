@@ -1,12 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HotelListing.Api.Models.DTOs.Auth
+namespace HotelListing.Api.Models.DTOs.Auth;
+
+public record LoginUserDto
 {
-    public class LoginUserDto
-    {
-        [Required, EmailAddress]
-        public string Email { get; set; } = string.Empty;
-        [Required]
-        public string Password { get; set; } = string.Empty;
-    }
+    [Required, EmailAddress]
+    public string Email { get; init; } = string.Empty;
+    [Required]
+    public string Password { get; init; } = string.Empty;
 }

@@ -2,41 +2,40 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HotelListing.Api.Controllers
+namespace HotelListing.Api.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class BaseApiController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class BaseApiController : ControllerBase
+    protected ActionResult<T> HandleResult<T>(Result<T> result)
     {
-        protected ActionResult<T> HandleResult<T>(Result<T> result)
+        if (result.IsSuccess)
         {
-            if (result.IsSuccess)
-            {
-                return Ok(result.Value);
-            }
-
-            return MapError(result.ErrorType, result.Error);
+            return Ok(result.Value);
         }
 
-        protected ActionResult HandleResult(Result result)
-        {
-            if (result.IsSuccess)
-            {
-                return NoContent();
-            }
+        return MapError(result.ErrorType, result.Error);
+    }
 
-            return MapError(result.ErrorType, result.Error);
+    protected ActionResult HandleResult(Result result)
+    {
+        if (result.IsSuccess)
+        {
+            return NoContent();
         }
 
-        protected ActionResult MapError(ErrorType errorType, string error)
+        return MapError(result.ErrorType, result.Error);
+    }
+
+    protected ActionResult MapError(ErrorType errorType, string error)
+    {
+        return errorType switch
         {
-            return errorType switch
-            {
-                ErrorType.NotFound => NotFound(new { message = error }), 
-                ErrorType.BadRequest => BadRequest(new { message = error }),
-                ErrorType.Conflict => Conflict(new { message = error }),
-                _ => StatusCode(500, new { message = error })
-            };
-        }
+            ErrorType.NotFound => NotFound(new { message = error }), 
+            ErrorType.BadRequest => BadRequest(new { message = error }),
+            ErrorType.Conflict => Conflict(new { message = error }),
+            _ => StatusCode(500, new { message = error })
+        };
     }
 }

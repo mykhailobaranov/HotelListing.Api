@@ -2,7 +2,7 @@
 
 namespace HotelListing.Api.Models.DTOs.Hotel;
 
-public class UpdateHotelDto : CreateHotelDto
+public record UpdateHotelDto : CreateHotelDto
 {
     [Required]
     public int Id { get; set; }

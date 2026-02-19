@@ -15,7 +15,7 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
     [HttpGet]
     public async Task<ActionResult<IEnumerable<GetBookingDto>>> GetBookings([FromRoute] int hotelId)
     {
-        var result = await service.GetBookingsForHotelAsync(hotelId);
+        var result = await service.GetUserBookingsForHotelAsync(hotelId);
         return HandleResult(result);
     }
 
