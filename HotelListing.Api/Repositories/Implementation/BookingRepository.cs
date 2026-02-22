@@ -1,7 +1,6 @@
 ﻿using HotelListing.Api.Data;
 using HotelListing.Api.Models;
 using HotelListing.Api.Models.Domain;
-using HotelListing.Api.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.Api.Repositories.Implementation;
@@ -15,28 +14,38 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
         _db = db;
     }
 
-    public async Task<Booking?> GetBookingDetailsAsync(int id)
+    public async Task<Booking?> GetBookingWithHotelAsync(int id)
     {
         return await _db.Bookings
-                .Include(q => q.Hotel)
+                .Include(b => b.Hotel)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(q => q.Id == id);
+                .FirstOrDefaultAsync(b => b.Id == id);
     }
 
-    public async Task<Booking?> GetBookingDetailsAsync(int id, int hotelId)
+    public async Task<Booking?> GetBookingWithHotelAsync(int id, int hotelId)
     {
         return await _db.Bookings
-            .FirstOrDefaultAsync(b => b.HotelId == hotelId && b.Id == id);
+                .Include(b => b.Hotel)
+                .FirstOrDefaultAsync(b => b.HotelId == hotelId && b.Id == id);
     }
 
     public async Task<IEnumerable<Booking>> GetBookingsForHotelAsync(int id)
     {
         return await _db.Bookings
-                .Include(q => q.Hotel)
+                .Include(b => b.Hotel)
                 .AsNoTracking()
-                .Where(q => q.HotelId == id)
-                .OrderBy(q=>q.CheckIn)
-                .ToListAsync(); 
+                .Where(b => b.HotelId == id)
+                .OrderBy(b => b.CheckIn)
+                .ToListAsync();
+    }
+
+    public async Task<Booking?> GetUserBookingAsync(int bookingId, string userId)
+    {
+        return await _db.Bookings
+            .Include(b => b.Hotel)
+            .FirstOrDefaultAsync(b =>
+                b.Id == bookingId
+                && b.UserId == userId);
     }
 
     public async Task<Booking?> GetUserBookingForHotelAsync(int bookingId, int hotelId, string userId)
@@ -49,15 +58,24 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
                 && b.UserId == userId);
     }
 
-    public async Task<bool> IsOverlap(int hotelId, string userId, DateOnly checkIn, DateOnly checkOut, int? bookingId = null)
+    public async Task<IEnumerable<Booking>> GetUserBookingsForHotelAsync(int hotelId, string userId)
+    {
+        return await _db.Bookings
+            .Include(b => b.Hotel)
+            .AsNoTracking()
+            .Where(b => b.HotelId == hotelId
+                     && b.UserId == userId)
+            .ToListAsync();
+    }
+
+    public async Task<bool> IsOverlapAsync(int hotelId, string userId, DateOnly checkIn, DateOnly checkOut, int? bookingId = null)
     {
         var query = _db.Bookings
-            .Where(
-                    b => b.HotelId == hotelId
-                    && b.Status != BookingStatus.Cancelled
-                    && checkIn < b.CheckOut
-                    && checkOut > b.CheckIn
-                    && b.UserId == userId)
+            .Where(b => b.HotelId == hotelId
+                     && b.Status != BookingStatus.Cancelled
+                     && checkIn < b.CheckOut
+                     && checkOut > b.CheckIn
+                     && b.UserId == userId)
             .AsQueryable();
 
         if (bookingId.HasValue)

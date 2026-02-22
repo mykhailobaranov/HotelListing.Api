@@ -3,22 +3,22 @@ using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace HotelListing.Api.Repositories.Implementation
+namespace HotelListing.Api.Repositories.Implementation;
+
+public class CountriesRepository : GenericRepository<Country>, ICountriesRepository
 {
-    public class CountriesRepository : GenericRepository<Country>, ICountriesRepository
+    private readonly HotelListingDbContext _db;
+
+    public CountriesRepository(HotelListingDbContext db) : base(db)
     {
-        private readonly HotelListingDbContext _db;
+        _db = db;
+    }
 
-        public CountriesRepository(HotelListingDbContext db) : base(db)
-        {
-            _db = db;
-        }
-
-        public async Task<Country?> GetCountryDetails(int id)
-        {
-            return await _db.Countries
-                .Include(q => q.Hotels)
-                .FirstOrDefaultAsync(q => q.CountryId == id);
-        }
-    }   
-}
+    public async Task<Country?> GetCountryWithHotelsAsync(int id)
+    {
+        return await _db.Countries
+            .Include(q => q.Hotels)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(q => q.CountryId == id);
+    }
+}   

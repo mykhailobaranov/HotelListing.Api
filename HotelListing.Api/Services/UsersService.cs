@@ -19,7 +19,7 @@ public class UsersService(
         var isRoleExist = await roleManager.RoleExistsAsync(registerUserDto.Role);
         if (!isRoleExist)
         {
-            return Result<RegisteredUserDto>.BadRequest($"Role '{registerUserDto.Role}' does not exist.");
+            return Result<RegisteredUserDto>.BadRequest($"Role '{registerUserDto.Role}' doesn't exist.");
         }
 
         //mapping to be added
@@ -41,7 +41,7 @@ public class UsersService(
         await userManager.AddToRoleAsync(user, registerUserDto.Role);
 
         //mapping to be added
-        var registeredUser = new RegisteredUserDto
+        var response = new RegisteredUserDto
         {
             Id = user.Id,
             Email = registerUserDto.Email,
@@ -50,7 +50,7 @@ public class UsersService(
             Role = registerUserDto.Role,
         };
 
-        return Result<RegisteredUserDto>.Success(registeredUser);
+        return Result<RegisteredUserDto>.Success(response);
     }
 
     public async Task<Result<string>> LoginAsync(LoginUserDto loginUserDto)
