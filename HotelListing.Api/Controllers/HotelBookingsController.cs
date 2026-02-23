@@ -1,4 +1,5 @@
-﻿using HotelListing.Api.Models.DTOs.Booking;
+﻿using HotelListing.Api.AuthorizationFilters;
+using HotelListing.Api.Models.DTOs.Booking;
 using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,9 +12,17 @@ namespace HotelListing.Api.Controllers;
 public class HotelBookingsController(IBookingsService service) : BaseApiController
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<GetBookingDto>>> GetBookings([FromRoute] int hotelId)
+    public async Task<ActionResult<IEnumerable<GetBookingDto>>> GetUserBookings([FromRoute] int hotelId)
     {
         var result = await service.GetUserBookingsForHotelAsync(hotelId);
+        return HandleResult(result);
+    }
+
+    [HttpGet("admin")]
+    [HotelOrSystemAdmin]
+    public async Task<ActionResult<IEnumerable<GetBookingDto>>> GetHotelBookings([FromRoute] int hotelId)
+    {
+        var result = await service.GetBookingsForHotelAsync(hotelId);
         return HandleResult(result);
     }
 
@@ -32,6 +41,7 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
     }
 
     [HttpDelete("{bookingId:int}")]
+    [HotelOrSystemAdmin]
     public async Task<ActionResult> DeleteBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
     {
         var result = await service.DeleteBookingAsync(hotelId, bookingId);

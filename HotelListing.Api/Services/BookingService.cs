@@ -41,6 +41,32 @@ public class BookingService(
         return Result<IEnumerable<GetBookingDto>>.Success(response);
     }
 
+    public async Task<Result<IEnumerable<GetBookingDto>>> GetBookingsForHotelAsync(int hotelId)
+    {
+        var hotelExist = await hotelsRepository.ExistsAsync(h => h.Id == hotelId);
+        if (!hotelExist)
+        {
+            return Result<IEnumerable<GetBookingDto>>.NotFound($"Hotel with id {hotelId} does not exist.");
+        }
+
+        var bookings = await repository.GetBookingsForHotelAsync(hotelId);
+
+        var response = bookings.Select(b => new GetBookingDto(
+            b.Id,
+            b.HotelId,
+            b.Hotel!.Name,
+            b.CheckIn,
+            b.CheckOut,
+            b.Guests,
+            b.TotalPrice,
+            b.Status.ToString(),
+            b.CreatedAtUtc,
+            b.UpdatedAtUtc
+            ));
+
+        return Result<IEnumerable<GetBookingDto>>.Success(response);
+    }
+
     public async Task<Result<GetBookingDto>> CreateBookingAsync(int hotelId, CreateBookingDto createDto)
     {
         var userId = GetUserId();

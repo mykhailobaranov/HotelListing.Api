@@ -2,7 +2,7 @@
 
 namespace HotelListing.Api.Models.DTOs.Auth;
 
-public record RegisterUserDto
+public record RegisterUserDto : IValidatableObject
 {
     [Required, EmailAddress]
     public string Email { get; init; } = string.Empty;
@@ -17,4 +17,16 @@ public record RegisterUserDto
     public string LastName { get; init; } = string.Empty;
 
     public string Role { get; init; } = "User";
+
+    public int? AssociatedHotelId { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Role == "Hotel Admin" && AssociatedHotelId.GetValueOrDefault() < 1)
+        {
+            yield return new ValidationResult(
+                "Please provide a valid Hotel Id",
+                [nameof(AssociatedHotelId)]);
+        }
+    }
 }

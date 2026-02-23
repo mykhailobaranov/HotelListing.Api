@@ -1,7 +1,9 @@
-﻿using HotelListing.Api.Models;
+﻿using HotelListing.Api.Data;
+using HotelListing.Api.Models;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Auth;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -10,6 +12,7 @@ using System.Text;
 namespace HotelListing.Api.Services;
 
 public class UsersService(
+    HotelListingDbContext db,
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole> roleManager,
     IConfiguration configuration) : IUsersService
@@ -39,6 +42,17 @@ public class UsersService(
         }
 
         await userManager.AddToRoleAsync(user, registerUserDto.Role);
+
+        if (registerUserDto.Role == "Hotel Admin")
+        {
+            var hotelAdmin = db.HotelAdmins.Add(
+                new HotelAdmin
+                {
+                    UserId = user.Id,
+                    HotelId = registerUserDto.AssociatedHotelId.GetValueOrDefault()
+                });
+            await db.SaveChangesAsync();
+        }
 
         //mapping to be added
         var response = new RegisteredUserDto
@@ -86,8 +100,20 @@ public class UsersService(
         // Set user role claims
         var roles = await userManager.GetRolesAsync(user);
         var roleClaims = roles.Select(x => new Claim(ClaimTypes.Role, x)).ToList();
+        claims.AddRange(roleClaims);
 
-        claims = claims.Union(roleClaims).ToList();
+        if (roles.Contains("Hotel Admin"))
+        {
+            var managedHotelId = await db.HotelAdmins
+                .Where(ha => ha.UserId == user.Id)
+                .Select(ha => ha.HotelId)
+                .FirstOrDefaultAsync();
+
+            if (managedHotelId != 0)
+            {
+                claims.Add(new Claim("HotelId", managedHotelId.ToString()));
+            }
+        }
 
         // Set JWT Key credentials
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtSettings:Key"] ?? string.Empty));
