@@ -47,4 +47,27 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
         var result = await service.DeleteBookingAsync(hotelId, bookingId);
         return HandleResult(result);
     }
+
+    [HttpPut("{bookingId:int}/cancel")]
+    public async Task<ActionResult> CancelBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
+    {
+        var result = await service.CancelBookingAsync(hotelId, bookingId);
+        return HandleResult(result);
+    }
+
+    [HttpPut("{bookingId:int}/admin/cancel")]
+    [HotelOrSystemAdmin]
+    public async Task<ActionResult<GetBookingDto>> AdminCanelBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
+    {
+        var result = await service.AdminUpdateBookingStatusAsync(hotelId, bookingId, Models.BookingStatus.Cancelled);
+        return HandleResult(result);
+    }
+
+    [HttpPut("{bookingId:int}/admin/confirm")]
+    [HotelOrSystemAdmin]
+    public async Task<ActionResult<GetBookingDto>> ConfirmBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
+    {
+        var result = await service.AdminUpdateBookingStatusAsync(hotelId, bookingId, Models.BookingStatus.Confirmed);
+        return HandleResult(result);
+    }
 }

@@ -14,27 +14,26 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
         _db = db;
     }
 
-    public async Task<Booking?> GetBookingWithHotelAsync(int id)
+    public async Task<Booking?> GetBookingWithHotelAsync(int bookingId)
     {
         return await _db.Bookings
                 .Include(b => b.Hotel)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(b => b.Id == id);
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
     }
 
-    public async Task<Booking?> GetBookingWithHotelAsync(int id, int hotelId)
+    public async Task<Booking?> GetBookingForHotelAsync(int bookingId, int hotelId)
     {
         return await _db.Bookings
-                .Include(b => b.Hotel)
-                .FirstOrDefaultAsync(b => b.HotelId == hotelId && b.Id == id);
+                .FirstOrDefaultAsync(b => b.Id == bookingId && b.HotelId == hotelId);
     }
 
-    public async Task<IEnumerable<Booking>> GetBookingsForHotelAsync(int id)
+    public async Task<IEnumerable<Booking>> GetBookingsForHotelAsync(int hotelId)
     {
         return await _db.Bookings
                 .Include(b => b.Hotel)
                 .AsNoTracking()
-                .Where(b => b.HotelId == id)
+                .Where(b => b.HotelId == hotelId)
                 .OrderBy(b => b.CheckIn)
                 .ToListAsync();
     }
@@ -52,6 +51,16 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
     {
         return await _db.Bookings
             .Include(b => b.Hotel)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b =>
+                b.Id == bookingId
+                && b.HotelId == hotelId
+                && b.UserId == userId);
+    }
+
+    public async Task<Booking?> GetUserBookingForHotelTrackedAsync(int bookingId, int hotelId, string userId)
+    {
+        return await _db.Bookings
             .FirstOrDefaultAsync(b =>
                 b.Id == bookingId
                 && b.HotelId == hotelId

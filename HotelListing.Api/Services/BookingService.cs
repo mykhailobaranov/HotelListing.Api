@@ -15,13 +15,13 @@ public class BookingService(
 {
     public async Task<Result<IEnumerable<GetBookingDto>>> GetUserBookingsForHotelAsync(int hotelId)
     {
-        var userId = GetUserId();
-
         var hotelExist = await hotelsRepository.ExistsAsync(h => h.Id == hotelId);
         if (!hotelExist)
         {
             return Result<IEnumerable<GetBookingDto>>.NotFound($"Hotel with id {hotelId} does not exist.");
         }
+
+        var userId = GetUserId();
 
         var bookings = await repository.GetUserBookingsForHotelAsync(hotelId, userId);
 
@@ -69,12 +69,12 @@ public class BookingService(
 
     public async Task<Result<GetBookingDto>> CreateBookingAsync(int hotelId, CreateBookingDto createDto)
     {
-        var userId = GetUserId();
-
         if (hotelId != createDto.HotelId)
         {
             return Result<GetBookingDto>.BadRequest($"Route HotelId {hotelId} does not match Body HotelId {createDto.HotelId}.");
         }
+
+        var userId = GetUserId();
 
         var overlap = await repository.IsOverlapAsync(hotelId, userId, createDto.CheckIn, createDto.CheckOut);
 
@@ -105,12 +105,10 @@ public class BookingService(
 
         await repository.AddAsync(booking);
 
-        booking = await repository.GetBookingWithHotelAsync(booking.Id);
-
         var response = new GetBookingDto(
-            booking!.Id,
-            booking.HotelId,
-            booking.Hotel!.Name,
+            booking.Id,
+            hotel.Id,
+            hotel.Name,
             booking.CheckIn,
             booking.CheckOut,
             booking.Guests,
@@ -123,7 +121,6 @@ public class BookingService(
         return Result<GetBookingDto>.Success(response);
     }
 
-
     public async Task<Result<GetBookingDto>> UpdateBookingAsync(int hotelId, int bookingId, UpdateBookingDto updateDto)
     {
         var userId = GetUserId();
@@ -135,7 +132,7 @@ public class BookingService(
             return Result<GetBookingDto>.Conflict("The updated dates overlap with one of your existing bookings.");
         }
 
-        var booking = await repository.GetUserBookingForHotelAsync(bookingId, hotelId, userId);
+        var booking = await repository.GetUserBookingForHotelTrackedAsync(bookingId, hotelId, userId);
 
         if (booking == null)
         {
@@ -147,7 +144,14 @@ public class BookingService(
             return Result<GetBookingDto>.Conflict($"Booking with id {bookingId} is cancelled and cannot be updated.");
         }
 
-        var perNightRate = booking.Hotel!.PerNightRate;
+        var hotel = await hotelsRepository.GetByIdAsync(hotelId);
+
+        if (hotel == null)
+        {
+            return Result<GetBookingDto>.NotFound($"Hotel with id {hotelId} not found.");
+        }
+
+        var perNightRate = hotel.PerNightRate;
         var nights = updateDto.CheckOut.DayNumber - updateDto.CheckIn.DayNumber;
         var totalPrice = perNightRate * nights;
 
@@ -162,7 +166,7 @@ public class BookingService(
         var response = new GetBookingDto(
             booking.Id,
             booking.HotelId,
-            booking.Hotel!.Name,
+            hotel.Name,
             booking.CheckIn,
             booking.CheckOut,
             booking.Guests,
@@ -177,7 +181,7 @@ public class BookingService(
 
     public async Task<Result> DeleteBookingAsync(int hotelId, int bookingId)
     {
-        var booking = await repository.GetBookingWithHotelAsync(bookingId, hotelId);
+        var booking = await repository.GetBookingForHotelAsync(bookingId, hotelId);
 
         if (booking == null)
         {
@@ -185,6 +189,57 @@ public class BookingService(
         }
 
         await repository.DeleteAsync(bookingId);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> CancelBookingAsync(int hotelId, int bookingId)
+    {
+        var userId = GetUserId();
+
+        var booking = await repository.GetUserBookingForHotelTrackedAsync(bookingId, hotelId, userId);
+
+        if (booking == null)
+        {
+            return Result.NotFound($"Booking with id {bookingId} for hotel {hotelId} was not found or access is denied.");
+        }
+
+        if (booking.Status == BookingStatus.Cancelled)
+        {
+            return Result.Conflict($"Booking with id {bookingId} is already cancelled.");
+        }
+
+        booking.Status = BookingStatus.Cancelled;
+        booking.UpdatedAtUtc = DateTime.UtcNow;
+
+        await repository.UpdateAsync(booking);
+ 
+        return Result.Success();
+    }
+
+    public async Task<Result> AdminUpdateBookingStatusAsync(int hotelId, int bookingId, BookingStatus bookingStatus)
+    {
+        var booking = await repository.GetBookingForHotelAsync(bookingId, hotelId);
+
+        if (booking == null)
+        {
+            return Result.NotFound($"Booking with id {bookingId} for hotel {hotelId} was not found or access is denied.");
+        }
+
+        if (booking.Status == BookingStatus.Cancelled)
+        {
+            return Result.Conflict($"Booking with id {bookingId} is already cancelled.");
+        }
+
+        if (booking.Status == bookingStatus)
+        {
+            return Result.Success();
+        }
+
+        booking.Status = bookingStatus;
+        booking.UpdatedAtUtc = DateTime.UtcNow;
+
+        await repository.UpdateAsync(booking);
 
         return Result.Success();
     }
