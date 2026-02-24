@@ -1,4 +1,4 @@
-﻿using HotelListing.Api.Models;
+﻿using HotelListing.Api.Models.Constants;
 using HotelListing.Api.Models.DTOs.Hotel;
 using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;

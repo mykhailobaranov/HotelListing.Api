@@ -1,4 +1,4 @@
-﻿using HotelListing.Api.Models;
+﻿using HotelListing.Api.Models.Constants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 

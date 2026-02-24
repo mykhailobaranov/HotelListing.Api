@@ -1,6 +1,6 @@
 ﻿using HotelListing.Api.Data;
-using HotelListing.Api.Models;
 using HotelListing.Api.Models.Domain;
+using HotelListing.Api.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.Api.Repositories.Implementation;
@@ -22,6 +22,7 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
                 .AsNoTracking()
                 .FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
     }
+
     public async Task<Booking?> GetBookingWithHotelAndUserAsync(int bookingId, int hotelId)
     {
         return await _db.Bookings

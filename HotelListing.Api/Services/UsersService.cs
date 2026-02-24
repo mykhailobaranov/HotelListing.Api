@@ -1,5 +1,6 @@
 ﻿using HotelListing.Api.Data;
 using HotelListing.Api.Models;
+using HotelListing.Api.Models.Config;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Auth;
 using Microsoft.AspNetCore.Identity;

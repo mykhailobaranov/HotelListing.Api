@@ -1,4 +1,5 @@
 ﻿using HotelListing.Api.Models;
+using HotelListing.Api.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelListing.Api.Controllers;

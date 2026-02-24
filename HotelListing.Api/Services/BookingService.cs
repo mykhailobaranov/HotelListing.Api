@@ -1,6 +1,7 @@
 ﻿using HotelListing.Api.Models;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Booking;
+using HotelListing.Api.Models.Enums;
 using HotelListing.Api.Repositories.Interface;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

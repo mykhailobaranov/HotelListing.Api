@@ -1,4 +1,6 @@
-﻿namespace HotelListing.Api.Models.Domain;
+﻿using HotelListing.Api.Models.Enums;
+
+namespace HotelListing.Api.Models.Domain;
 
 public class Booking
 {

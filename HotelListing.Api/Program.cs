@@ -1,6 +1,6 @@
 using HotelListing.Api.Data;
 using HotelListing.Api.MappingProfiles;
-using HotelListing.Api.Models;
+using HotelListing.Api.Models.Config;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Repositories.Implementation;
 using HotelListing.Api.Repositories.Interface;

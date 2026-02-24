@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelListing.Api.Models.Constants;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelListing.Api.Models.DTOs.Auth;
 

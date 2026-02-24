@@ -1,5 +1,6 @@
 ﻿using HotelListing.Api.Models;
 using HotelListing.Api.Models.DTOs.Booking;
+using HotelListing.Api.Models.Enums;
 
 namespace HotelListing.Api.Services;
 

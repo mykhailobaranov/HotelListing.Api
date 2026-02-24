@@ -1,6 +1,7 @@
 ﻿using HotelListing.Api.AuthorizationFilters;
 using HotelListing.Api.Models;
 using HotelListing.Api.Models.DTOs.Booking;
+using HotelListing.Api.Models.Enums;
 using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -85,7 +86,7 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
     [HotelOrSystemAdmin]
     public async Task<ActionResult<GetBookingDto>> AdminCanelBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
     {
-        var result = await service.AdminUpdateBookingStatusAsync(hotelId, bookingId, Models.BookingStatus.Cancelled);
+        var result = await service.AdminUpdateBookingStatusAsync(hotelId, bookingId, BookingStatus.Cancelled);
         return HandleResult(result);
     }
 
@@ -93,7 +94,7 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
     [HotelOrSystemAdmin]
     public async Task<ActionResult<GetBookingDto>> ConfirmBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
     {
-        var result = await service.AdminUpdateBookingStatusAsync(hotelId, bookingId, Models.BookingStatus.Confirmed);
+        var result = await service.AdminUpdateBookingStatusAsync(hotelId, bookingId, BookingStatus.Confirmed);
         return HandleResult(result);
     }
 }
