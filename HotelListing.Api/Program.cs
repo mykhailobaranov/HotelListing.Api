@@ -1,5 +1,6 @@
 using HotelListing.Api.Data;
 using HotelListing.Api.MappingProfiles;
+using HotelListing.Api.Models;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Repositories.Implementation;
 using HotelListing.Api.Repositories.Interface;
@@ -25,6 +26,14 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => { })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<HotelListingDbContext>();
 
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+
+if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.Key))
+{
+    throw new InvalidOperationException("JwtSettings configuration is missing or invalid.");
+}
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -39,9 +48,9 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-        ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"] ?? string.Empty)),
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
         ClockSkew = TimeSpan.Zero
     };
 });

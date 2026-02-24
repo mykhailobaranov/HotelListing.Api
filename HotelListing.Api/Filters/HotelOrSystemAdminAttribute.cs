@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using HotelListing.Api.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace HotelListing.Api.AuthorizationFilters;
@@ -16,12 +17,12 @@ public class HotelOrSystemAdminAttribute : Attribute, IAsyncAuthorizationFilter
             return Task.CompletedTask;
         }
 
-        if (httpUser.IsInRole("Admin"))
+        if (httpUser.IsInRole(RoleNames.Admin))
         {
             return Task.CompletedTask;
         }
 
-        if (!httpUser.IsInRole("Hotel Admin"))
+        if (!httpUser.IsInRole(RoleNames.HotelAdmin))
         {
             context.Result = new ForbidResult();
             return Task.CompletedTask;

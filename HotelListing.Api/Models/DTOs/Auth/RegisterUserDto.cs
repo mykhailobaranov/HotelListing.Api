@@ -16,13 +16,13 @@ public record RegisterUserDto : IValidatableObject
     [Required, MaxLength(50)]
     public string LastName { get; init; } = string.Empty;
 
-    public string Role { get; init; } = "User";
+    public string Role { get; init; } = RoleNames.User;
 
     public int? AssociatedHotelId { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (Role == "Hotel Admin" && AssociatedHotelId.GetValueOrDefault() < 1)
+        if (Role == RoleNames.HotelAdmin && AssociatedHotelId.GetValueOrDefault() < 1)
         {
             yield return new ValidationResult(
                 "Please provide a valid Hotel Id",

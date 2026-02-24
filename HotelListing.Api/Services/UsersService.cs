@@ -4,6 +4,7 @@ using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -15,6 +16,7 @@ public class UsersService(
     HotelListingDbContext db,
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole> roleManager,
+    IOptions<JwtSettings> jwtOptions,
     IConfiguration configuration) : IUsersService
 {
     public async Task<Result<RegisteredUserDto>> RegisterAsync(RegisterUserDto registerUserDto)
@@ -92,7 +94,7 @@ public class UsersService(
         var claims = new List<Claim>
         {
             new (JwtRegisteredClaimNames.Sub, user.Id),
-            new (JwtRegisteredClaimNames.Email, user.Email),
+            new (JwtRegisteredClaimNames.Email, user.Email!),
             new (JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new (JwtRegisteredClaimNames.Name, user.FullName)
         };
@@ -116,15 +118,15 @@ public class UsersService(
         }
 
         // Set JWT Key credentials
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtSettings:Key"] ?? string.Empty));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Value.Key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         // Create an encoded token
         var token = new JwtSecurityToken(
-            issuer: configuration["JwtSettings:Issuer"],
-            audience: configuration["JwtSettings:Audience"],
+            issuer: jwtOptions.Value.Issuer,
+            audience: jwtOptions.Value.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(Convert.ToInt32(configuration["JwtSettings:DurationInMinutes"])),
+            expires: DateTime.UtcNow.AddMinutes(Convert.ToInt32(jwtOptions.Value.DurationInMinutes)),
             signingCredentials: credentials
             );
 
