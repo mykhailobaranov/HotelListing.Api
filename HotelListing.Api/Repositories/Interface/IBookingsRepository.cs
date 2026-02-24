@@ -3,7 +3,8 @@ using HotelListing.Api.Repositories.Interface;
 
 public interface IBookingsRepository : IGenericRepository<Booking>
 {
-    Task<Booking?> GetBookingWithHotelAsync(int bookingId);
+    Task<Booking?> GetBookingWithHotelAndCountryAsync(int bookingId, string userId);
+    Task<Booking?> GetBookingWithHotelAndUserAsync(int bookingId, int hotelId);
     Task<Booking?> GetBookingForHotelAsync(int bookingId, int hotelId);
     Task<IEnumerable<Booking>> GetBookingsForHotelAsync(int hotelId);
     Task<Booking?> GetUserBookingAsync(int bookingId, string userId);

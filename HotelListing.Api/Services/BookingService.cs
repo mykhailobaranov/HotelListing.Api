@@ -213,7 +213,7 @@ public class BookingService(
         booking.UpdatedAtUtc = DateTime.UtcNow;
 
         await repository.UpdateAsync(booking);
- 
+
         return Result.Success();
     }
 
@@ -244,6 +244,62 @@ public class BookingService(
         return Result.Success();
     }
 
+    public async Task<Result<GetBookingDetailsDto>> GetUserBookingDetailsAsync(int hotelId, int bookingId)
+    {
+        var userId = GetUserId();
+
+        var booking = await repository.GetBookingWithHotelAndCountryAsync(bookingId, userId);
+
+        if (booking == null || booking.HotelId != hotelId)
+        {
+            return Result<GetBookingDetailsDto>.NotFound($"Booking with id {bookingId} for hotel {hotelId} was not found or access is denied.");
+        }
+
+        var response = new GetBookingDetailsDto(
+            booking.Id,
+            booking.HotelId,
+            booking.Hotel!.Name,
+            booking.Hotel!.Address ?? "Unknown",
+            booking.Hotel!.Rating,
+            booking.Hotel?.Country?.Name ?? "Unknown",
+            booking.CheckIn,
+            booking.CheckOut,
+            booking.Guests,
+            booking.TotalPrice,
+            booking.Status.ToString(),
+            booking.CreatedAtUtc,
+            booking.UpdatedAtUtc
+            );
+
+        return Result<GetBookingDetailsDto>.Success(response);
+    }
+
+    public async Task<Result<GetAdminBookingDetailsDto>> GetAdminBookingDetailsAsync(int hotelId, int bookingId)
+    {
+        var booking = await repository.GetBookingWithHotelAndUserAsync(bookingId, hotelId);
+
+        if (booking == null || booking.HotelId != hotelId)
+        {
+            return Result<GetAdminBookingDetailsDto>.NotFound($"Booking with id {bookingId} for hotel {hotelId} was not found or access is denied.");
+        }
+
+        var response = new GetAdminBookingDetailsDto(
+            booking.Id,
+            booking.HotelId,
+            booking.Hotel!.Name,
+            booking.User!.FullName,
+            booking.User!.Email ?? "Unknown",
+            booking.CheckIn,
+            booking.CheckOut,
+            booking.Guests,
+            booking.TotalPrice,
+            booking.Status.ToString(),
+            booking.CreatedAtUtc,
+            booking.UpdatedAtUtc
+            );
+
+        return Result<GetAdminBookingDetailsDto>.Success(response);
+    }
     private string GetUserId()
     {
         return httpContext?.HttpContext?.User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value

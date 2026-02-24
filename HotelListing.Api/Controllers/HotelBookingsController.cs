@@ -26,6 +26,21 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
         return HandleResult(result);
     }
 
+    [HttpGet("{bookingId:int}")]
+    public async Task<ActionResult<GetBookingDetailsDto>> GetUserBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
+    {
+        var result = await service.GetUserBookingDetailsAsync(hotelId, bookingId);
+        return HandleResult(result);
+    }
+
+    [HttpGet("{bookingId:int}/admin")]
+    [HotelOrSystemAdmin]
+    public async Task<ActionResult<GetAdminBookingDetailsDto>> GetUserBookingAdmin([FromRoute] int hotelId, [FromRoute] int bookingId)
+    {
+        var result = await service.GetAdminBookingDetailsAsync(hotelId, bookingId);
+        return HandleResult(result);
+    }
+
     [HttpPost]
     public async Task<ActionResult<GetBookingDto>> CreateBooking([FromRoute] int hotelId, [FromBody] CreateBookingDto createDto)
     {

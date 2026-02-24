@@ -14,12 +14,21 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
         _db = db;
     }
 
-    public async Task<Booking?> GetBookingWithHotelAsync(int bookingId)
+    public async Task<Booking?> GetBookingWithHotelAndCountryAsync(int bookingId, string userId)
     {
         return await _db.Bookings
                 .Include(b => b.Hotel)
+                    .ThenInclude(h => h.Country)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(b => b.Id == bookingId);
+                .FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
+    }
+    public async Task<Booking?> GetBookingWithHotelAndUserAsync(int bookingId, int hotelId)
+    {
+        return await _db.Bookings
+               .Include(b => b.Hotel)
+               .Include(b => b.User)
+               .AsNoTracking()
+               .FirstOrDefaultAsync(b => b.Id == bookingId && b.HotelId == hotelId);
     }
 
     public async Task<Booking?> GetBookingForHotelAsync(int bookingId, int hotelId)
