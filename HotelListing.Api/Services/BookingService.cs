@@ -2,6 +2,7 @@
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Booking;
 using HotelListing.Api.Models.Enums;
+using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Repositories.Interface;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -14,19 +15,19 @@ public class BookingService(
     IHttpContextAccessor httpContext
     ) : IBookingsService
 {
-    public async Task<Result<IEnumerable<GetBookingDto>>> GetUserBookingsForHotelAsync(int hotelId)
+    public async Task<Result<PagedResult<GetBookingDto>>> GetUserBookingsForHotelAsync(int hotelId, PaginationParameters parameters)
     {
         var hotelExist = await hotelsRepository.ExistsAsync(h => h.Id == hotelId);
         if (!hotelExist)
         {
-            return Result<IEnumerable<GetBookingDto>>.NotFound($"Hotel with id {hotelId} does not exist.");
+            return Result<PagedResult<GetBookingDto>>.NotFound($"Hotel with id {hotelId} does not exist.");
         }
 
         var userId = GetUserId();
 
-        var bookings = await repository.GetUserBookingsForHotelAsync(hotelId, userId);
+        var bookings = await repository.GetUserBookingsForHotelAsync(hotelId, userId, parameters);
 
-        var response = bookings.Select(b => new GetBookingDto(
+        var dto = bookings.Data.Select(b => new GetBookingDto(
             b.Id,
             b.HotelId,
             b.Hotel!.Name,
@@ -39,20 +40,26 @@ public class BookingService(
             b.UpdatedAtUtc
             ));
 
-        return Result<IEnumerable<GetBookingDto>>.Success(response);
+        var response = new PagedResult<GetBookingDto>
+        {
+            Data = dto,
+            Metadata = bookings.Metadata
+        };
+
+        return Result<PagedResult<GetBookingDto>>.Success(response);
     }
 
-    public async Task<Result<IEnumerable<GetBookingDto>>> GetBookingsForHotelAsync(int hotelId)
+    public async Task<Result<PagedResult<GetBookingDto>>> GetBookingsForHotelAsync(int hotelId, PaginationParameters parameters)
     {
         var hotelExist = await hotelsRepository.ExistsAsync(h => h.Id == hotelId);
         if (!hotelExist)
         {
-            return Result<IEnumerable<GetBookingDto>>.NotFound($"Hotel with id {hotelId} does not exist.");
+            return Result<PagedResult<GetBookingDto>>.NotFound($"Hotel with id {hotelId} does not exist.");
         }
 
-        var bookings = await repository.GetBookingsForHotelAsync(hotelId);
+        var bookings = await repository.GetBookingsForHotelAsync(hotelId, parameters);
 
-        var response = bookings.Select(b => new GetBookingDto(
+        var dto = bookings.Data.Select(b => new GetBookingDto(
             b.Id,
             b.HotelId,
             b.Hotel!.Name,
@@ -65,7 +72,13 @@ public class BookingService(
             b.UpdatedAtUtc
             ));
 
-        return Result<IEnumerable<GetBookingDto>>.Success(response);
+        var response = new PagedResult<GetBookingDto>
+        {
+            Data = dto,
+            Metadata = bookings.Metadata
+        };
+
+        return Result<PagedResult<GetBookingDto>>.Success(response);
     }
 
     public async Task<Result<GetBookingDto>> CreateBookingAsync(int hotelId, CreateBookingDto createDto)

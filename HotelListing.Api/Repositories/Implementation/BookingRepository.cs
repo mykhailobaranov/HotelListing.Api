@@ -1,6 +1,8 @@
 ﻿using HotelListing.Api.Data;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.Enums;
+using HotelListing.Api.Models.Pagination;
+using HotelListing.Api.Repositories.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.Api.Repositories.Implementation;
@@ -38,14 +40,15 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
                 .FirstOrDefaultAsync(b => b.Id == bookingId && b.HotelId == hotelId);
     }
 
-    public async Task<IEnumerable<Booking>> GetBookingsForHotelAsync(int hotelId)
+    public async Task<PagedResult<Booking>> GetBookingsForHotelAsync(int hotelId, PaginationParameters parameters)
     {
-        return await _db.Bookings
+        var query = _db.Bookings
                 .Include(b => b.Hotel)
                 .AsNoTracking()
                 .Where(b => b.HotelId == hotelId)
-                .OrderBy(b => b.CheckIn)
-                .ToListAsync();
+                .OrderBy(b => b.CheckIn);
+
+        return await query.ToPagedResultAsync(parameters);
     }
 
     public async Task<Booking?> GetUserBookingAsync(int bookingId, string userId)
@@ -77,14 +80,14 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
                 && b.UserId == userId);
     }
 
-    public async Task<IEnumerable<Booking>> GetUserBookingsForHotelAsync(int hotelId, string userId)
+    public async Task<PagedResult<Booking>> GetUserBookingsForHotelAsync(int hotelId, string userId, PaginationParameters parameters)
     {
-        return await _db.Bookings
+        var query = _db.Bookings
             .Include(b => b.Hotel)
             .AsNoTracking()
-            .Where(b => b.HotelId == hotelId
-                     && b.UserId == userId)
-            .ToListAsync();
+            .Where(b => b.HotelId == hotelId && b.UserId == userId);
+
+        return await query.ToPagedResultAsync(parameters);
     }
 
     public async Task<bool> IsOverlapAsync(int hotelId, string userId, DateOnly checkIn, DateOnly checkOut, int? bookingId = null)

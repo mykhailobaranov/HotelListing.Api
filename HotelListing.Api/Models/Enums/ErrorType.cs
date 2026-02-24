@@ -1,4 +1,4 @@
-﻿namespace HotelListing.Api.Models;
+﻿namespace HotelListing.Api.Models.Enums;
 
 public enum ErrorType
 {

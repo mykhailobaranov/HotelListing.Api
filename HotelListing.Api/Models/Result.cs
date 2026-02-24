@@ -1,4 +1,6 @@
-﻿namespace HotelListing.Api.Models;
+﻿using HotelListing.Api.Models.Enums;
+
+namespace HotelListing.Api.Models;
 
 public class Result<T>
 {
