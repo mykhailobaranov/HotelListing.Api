@@ -2,6 +2,7 @@
 using HotelListing.Api.Models;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Hotel;
+using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,13 +13,11 @@ public class HotelsService(
     ICountriesRepository countriesRepository,
     IMapper mapper) : IHotelsService
 {
-    public async Task<Result<IEnumerable<GetHotelsDto>>> GetHotelsAsync()
+    public async Task<Result<PagedResult<GetHotelsDto>>> GetHotelsAsync(PaginationParameters parameters)
     {
-        var hotels = await hotelsRepository.GetAllAsync();
+        var response = await hotelsRepository.GetAllPagedAsync<GetHotelsDto>(parameters);
 
-        var response = mapper.Map<IEnumerable<GetHotelsDto>>(hotels);
-
-        return Result<IEnumerable<GetHotelsDto>>.Success(response);
+        return Result<PagedResult<GetHotelsDto>>.Success(response);
     }
 
     public async Task<Result<GetHotelDto>> GetHotelAsync(int id)

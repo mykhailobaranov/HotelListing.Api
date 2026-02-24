@@ -1,5 +1,6 @@
 ﻿using HotelListing.Api.Models.Constants;
 using HotelListing.Api.Models.DTOs.Country;
+using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,9 +13,9 @@ namespace HotelListing.Api.Controllers;
 public class CountriesController(ICountriesService service) : BaseApiController
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<GetCountriesDto>>> GetCountries()
+    public async Task<ActionResult<PagedResult<GetCountriesDto>>> GetCountries([FromQuery] PaginationParameters parameters)
     {
-        var result = await service.GetCountriesAsync();
+        var result = await service.GetCountriesAsync(parameters);
         return HandleResult(result);
     }
 
@@ -33,7 +34,7 @@ public class CountriesController(ICountriesService service) : BaseApiController
 
         if (result.IsSuccess)
         {
-            return CreatedAtAction("GetCountry", new { id = result.Value!.CountryId }, result.Value);
+            return CreatedAtAction(nameof(GetCountry), new { id = result.Value!.CountryId }, result.Value);
         }
 
         return MapError(result.ErrorType, result.Error);

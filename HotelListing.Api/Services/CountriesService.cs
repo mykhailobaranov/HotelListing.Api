@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HotelListing.Api.Models;
 using HotelListing.Api.Models.DTOs.Country;
+using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,13 +9,11 @@ namespace HotelListing.Api.Services;
 
 public class CountriesService(ICountriesRepository repository, IMapper mapper) : ICountriesService
 {
-    public async Task<Result<IEnumerable<GetCountriesDto>>> GetCountriesAsync()
+    public async Task<Result<PagedResult<GetCountriesDto>>> GetCountriesAsync(PaginationParameters parameters)
     {
-        var countries = await repository.GetAllAsync();
+        var response = await repository.GetAllPagedAsync<GetCountriesDto>(parameters);
 
-        var response = mapper.Map<List<GetCountriesDto>>(countries);
-
-        return Result<IEnumerable<GetCountriesDto>>.Success(response);
+        return Result<PagedResult<GetCountriesDto>>.Success(response);
     }
 
     public async Task<Result<GetCountryDto>> GetCountryAsync(int id)

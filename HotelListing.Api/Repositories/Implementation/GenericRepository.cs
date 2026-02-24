@@ -1,17 +1,37 @@
-﻿using HotelListing.Api.Data;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using HotelListing.Api.Data;
+using HotelListing.Api.Models.Pagination;
+using HotelListing.Api.Repositories.Extensions;
 using HotelListing.Api.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace HotelListing.Api.Repositories.Implementation;
 
-public class GenericRepository<T>(HotelListingDbContext db) : IGenericRepository<T> where T : class
+public class GenericRepository<T>(HotelListingDbContext db, IMapper mapper) : IGenericRepository<T> where T : class
 {
     public async Task<IEnumerable<T>> GetAllAsync()
     {
         return await db.Set<T>()
             .AsNoTracking()
             .ToListAsync();
+    }
+
+    public async Task<PagedResult<T>> GetAllPagedAsync(PaginationParameters parameters)
+    {
+        return await db.Set<T>()
+            .AsNoTracking()
+            .ToPagedResultAsync(parameters);
+    }
+
+    public async Task<PagedResult<TResult>> GetAllPagedAsync<TResult>(PaginationParameters parameters)
+    {
+        var query = db.Set<T>()
+        .AsNoTracking()
+        .ProjectTo<TResult>(mapper.ConfigurationProvider);
+
+        return await query.ToPagedResultAsync(parameters);
     }
 
     public async Task<T?> GetByIdAsync(int id)

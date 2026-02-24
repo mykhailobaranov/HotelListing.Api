@@ -1,4 +1,5 @@
-﻿using HotelListing.Api.Data;
+﻿using AutoMapper;
+using HotelListing.Api.Data;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,7 @@ public class CountriesRepository : GenericRepository<Country>, ICountriesReposit
 {
     private readonly HotelListingDbContext _db;
 
-    public CountriesRepository(HotelListingDbContext db) : base(db)
+    public CountriesRepository(HotelListingDbContext db, IMapper mapper) : base(db, mapper)
     {
         _db = db;
     }

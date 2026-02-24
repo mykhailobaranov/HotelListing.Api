@@ -1,4 +1,5 @@
-﻿using HotelListing.Api.Data;
+﻿using AutoMapper;
+using HotelListing.Api.Data;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.Enums;
 using HotelListing.Api.Models.Pagination;
@@ -11,7 +12,7 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
 {
     private readonly HotelListingDbContext _db;
 
-    public BookingRepository(HotelListingDbContext db) : base(db)
+    public BookingRepository(HotelListingDbContext db, IMapper mapper) : base(db, mapper)
     {
         _db = db;
     }
@@ -42,13 +43,12 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
 
     public async Task<PagedResult<Booking>> GetBookingsForHotelAsync(int hotelId, PaginationParameters parameters)
     {
-        var query = _db.Bookings
+         return await _db.Bookings
                 .Include(b => b.Hotel)
                 .AsNoTracking()
                 .Where(b => b.HotelId == hotelId)
-                .OrderBy(b => b.CheckIn);
-
-        return await query.ToPagedResultAsync(parameters);
+                .OrderBy(b => b.CheckIn)
+                .ToPagedResultAsync(parameters);
     }
 
     public async Task<Booking?> GetUserBookingAsync(int bookingId, string userId)
@@ -82,12 +82,11 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
 
     public async Task<PagedResult<Booking>> GetUserBookingsForHotelAsync(int hotelId, string userId, PaginationParameters parameters)
     {
-        var query = _db.Bookings
+        return await _db.Bookings
             .Include(b => b.Hotel)
             .AsNoTracking()
-            .Where(b => b.HotelId == hotelId && b.UserId == userId);
-
-        return await query.ToPagedResultAsync(parameters);
+            .Where(b => b.HotelId == hotelId && b.UserId == userId)
+            .ToPagedResultAsync(parameters);
     }
 
     public async Task<bool> IsOverlapAsync(int hotelId, string userId, DateOnly checkIn, DateOnly checkOut, int? bookingId = null)
