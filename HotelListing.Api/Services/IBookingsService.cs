@@ -1,15 +1,16 @@
 ﻿using HotelListing.Api.Models;
 using HotelListing.Api.Models.DTOs.Booking;
 using HotelListing.Api.Models.Enums;
+using HotelListing.Api.Models.Filtering;
 using HotelListing.Api.Models.Pagination;
 
 namespace HotelListing.Api.Services;
 
 public interface IBookingsService
 {
-    Task<Result<PagedResult<GetBookingDto>>> GetUserBookingsForHotelAsync(int hotelId, PaginationParameters parameters);
+    Task<Result<PagedResult<GetBookingDto>>> GetUserBookingsForHotelAsync(int hotelId, PaginationParameters paging, BookingFilterParameters filters);
+    Task<Result<PagedResult<GetBookingDto>>> GetBookingsForHotelAsync(int hotelId, PaginationParameters paging, BookingFilterParameters filters);
     //Task<Result<IEnumerable<GetBookingDto>>> GetUserBookingsAsync();
-    Task<Result<PagedResult<GetBookingDto>>> GetBookingsForHotelAsync(int hotelId, PaginationParameters parameters);
     Task<Result<GetBookingDetailsDto>> GetUserBookingDetailsAsync(int hotelId, int bookingId);
     Task<Result<GetAdminBookingDetailsDto>> GetAdminBookingDetailsAsync(int hotelId, int bookingId);
     Task<Result<GetBookingDto>> CreateBookingAsync(int hotelId, CreateBookingDto createDto);

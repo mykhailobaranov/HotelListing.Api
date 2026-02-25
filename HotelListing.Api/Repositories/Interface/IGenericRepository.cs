@@ -8,6 +8,8 @@ public interface IGenericRepository<T> where T : class
     Task<IEnumerable<T>> GetAllAsync();
     Task<PagedResult<T>> GetAllPagedAsync(PaginationParameters queryParameters);
     Task<PagedResult<TResult>> GetAllPagedAsync<TResult>(PaginationParameters queryParameters);
+    Task<PagedResult<TResult>> GetAllPagedAsync<TResult>(IQueryable<T> query, PaginationParameters queryParameters);
+    IQueryable<T> GetAllAsQueryable();
     Task<T?> GetByIdAsync(int id);
     Task AddAsync(T entity);
     Task UpdateAsync(T entity);

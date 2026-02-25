@@ -2,6 +2,7 @@
 using HotelListing.Api.Models;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Hotel;
+using HotelListing.Api.Models.Filtering;
 using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -13,9 +14,66 @@ public class HotelsService(
     ICountriesRepository countriesRepository,
     IMapper mapper) : IHotelsService
 {
-    public async Task<Result<PagedResult<GetHotelsDto>>> GetHotelsAsync(PaginationParameters parameters)
+    public async Task<Result<PagedResult<GetHotelsDto>>> GetHotelsAsync(
+        PaginationParameters paging, HotelFilterParameters filters)
     {
-        var response = await hotelsRepository.GetAllPagedAsync<GetHotelsDto>(parameters);
+        var query = hotelsRepository.GetAllAsQueryable();
+
+        if (filters.CountryId.HasValue)
+        {
+            query = query.Where(x => x.CountryId == filters.CountryId.Value);
+        }
+
+        if (filters.MinRating.HasValue)
+        {
+            query = query.Where(x => x.Rating >= filters.MinRating.Value);
+        }
+
+        if (filters.MaxRating.HasValue)
+        {
+            query = query.Where(x => x.Rating <= filters.MaxRating.Value);
+        }
+
+        if (filters.MinPrice.HasValue)
+        {
+            query = query.Where(x => x.PerNightRate >= filters.MinPrice.Value);
+        }
+
+        if (filters.MaxPrice.HasValue)
+        {
+            query = query.Where(x => x.PerNightRate <= filters.MaxPrice.Value);
+        }
+
+        if (!string.IsNullOrEmpty(filters.Location))
+        {
+            query = query.Where(h => h.Address.Contains(filters.Location));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filters.Search))
+        {
+            query = query.Where(x =>
+                x.Name.Contains(filters.Search) ||
+                x.Address.Contains(filters.Search));
+        }
+
+        query = filters.SortBy?.ToLower() switch
+        {
+            "price" => filters.SortDescending
+                ? query.OrderByDescending(x => x.PerNightRate).ThenByDescending(x => x.Id)
+                : query.OrderBy(x => x.PerNightRate).ThenBy(x => x.Id),
+
+            "rating" => filters.SortDescending
+                ? query.OrderByDescending(x => x.Rating).ThenByDescending(x => x.Id)
+                : query.OrderBy(x => x.Rating).ThenBy(x => x.Id),
+
+            "name" => filters.SortDescending
+                ? query.OrderByDescending(x => x.Name).ThenByDescending(x => x.Id)
+                : query.OrderBy(x => x.Name).ThenBy(x => x.Id),
+
+            _ => query.OrderBy(x => x.Id)
+        };
+
+        var response = await hotelsRepository.GetAllPagedAsync<GetHotelsDto>(query, paging);
 
         return Result<PagedResult<GetHotelsDto>>.Success(response);
     }

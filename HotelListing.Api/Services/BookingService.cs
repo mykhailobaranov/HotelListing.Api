@@ -2,6 +2,7 @@
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Booking;
 using HotelListing.Api.Models.Enums;
+using HotelListing.Api.Models.Filtering;
 using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Repositories.Interface;
 using System.IdentityModel.Tokens.Jwt;
@@ -15,7 +16,7 @@ public class BookingService(
     IHttpContextAccessor httpContext
     ) : IBookingsService
 {
-    public async Task<Result<PagedResult<GetBookingDto>>> GetUserBookingsForHotelAsync(int hotelId, PaginationParameters parameters)
+    public async Task<Result<PagedResult<GetBookingDto>>> GetUserBookingsForHotelAsync(int hotelId, PaginationParameters paging, BookingFilterParameters filters)
     {
         var hotelExist = await hotelsRepository.ExistsAsync(h => h.Id == hotelId);
         if (!hotelExist)
@@ -23,9 +24,13 @@ public class BookingService(
             return Result<PagedResult<GetBookingDto>>.NotFound($"Hotel with id {hotelId} does not exist.");
         }
 
+        var query = repository.GetAllAsQueryable();
+
+        query = ApplyFilters(hotelId, filters, query);
+
         var userId = GetUserId();
 
-        var bookings = await repository.GetUserBookingsForHotelAsync(hotelId, userId, parameters);
+        var bookings = await repository.GetUserBookingsForHotelAsync(userId, paging, query);
 
         var dto = bookings.Data.Select(b => new GetBookingDto(
             b.Id,
@@ -49,7 +54,7 @@ public class BookingService(
         return Result<PagedResult<GetBookingDto>>.Success(response);
     }
 
-    public async Task<Result<PagedResult<GetBookingDto>>> GetBookingsForHotelAsync(int hotelId, PaginationParameters parameters)
+    public async Task<Result<PagedResult<GetBookingDto>>> GetBookingsForHotelAsync(int hotelId, PaginationParameters paging, BookingFilterParameters filters)
     {
         var hotelExist = await hotelsRepository.ExistsAsync(h => h.Id == hotelId);
         if (!hotelExist)
@@ -57,7 +62,11 @@ public class BookingService(
             return Result<PagedResult<GetBookingDto>>.NotFound($"Hotel with id {hotelId} does not exist.");
         }
 
-        var bookings = await repository.GetBookingsForHotelAsync(hotelId, parameters);
+        var query = repository.GetAllAsQueryable();
+
+        query = ApplyFilters(hotelId, filters, query);
+
+        var bookings = await repository.GetBookingsForHotelAsync(paging, query);
 
         var dto = bookings.Data.Select(b => new GetBookingDto(
             b.Id,
@@ -322,5 +331,60 @@ public class BookingService(
         return httpContext?.HttpContext?.User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? httpContext?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? string.Empty;
+    }
+
+    private IQueryable<Booking> ApplyFilters(int hotelId, BookingFilterParameters filters, IQueryable<Booking> query)
+    {
+        query = query.Where(b => b.HotelId == hotelId);
+
+        if (filters.Status.HasValue)
+        {
+            query = query.Where(b => b.Status == filters.Status.Value);
+        }
+
+        if (filters.CheckInFrom.HasValue)
+        {
+            query = query.Where(b => b.CheckIn >= filters.CheckInFrom.Value);
+        }
+
+        if (filters.CheckInTo.HasValue)
+        {
+            query = query.Where(b => b.CheckIn <= filters.CheckInTo.Value);
+        }
+
+        if (filters.MinPrice.HasValue)
+        {
+            query = query.Where(b => b.TotalPrice >= filters.MinPrice.Value);
+        }
+
+        if (filters.MaxPrice.HasValue)
+        {
+            query = query.Where(b => b.TotalPrice <= filters.MaxPrice.Value);
+        }
+
+        if (filters.MinGuests.HasValue)
+        {
+            query = query.Where(b => b.Guests >= filters.MinGuests.Value);
+        }
+
+        if (filters.MaxGuests.HasValue)
+        {
+            query = query.Where(b => b.Guests <= filters.MaxGuests.Value);
+        }
+
+        query = filters.SortBy?.ToLower() switch
+        {
+            "checkin" => filters.SortDescending ?
+                query.OrderByDescending(b => b.CheckIn) : query.OrderBy(b => b.CheckIn),
+            "checkout" => filters.SortDescending ?
+                query.OrderByDescending(b => b.CheckOut) : query.OrderBy(b => b.CheckOut),
+            "price" => filters.SortDescending ?
+                query.OrderByDescending(b => b.TotalPrice) : query.OrderBy(b => b.TotalPrice),
+            "created" => filters.SortDescending ?
+                query.OrderByDescending(b => b.CreatedAtUtc) : query.OrderBy(b => b.CreatedAtUtc),
+            _ => query.OrderByDescending(b => b.CheckIn).ThenByDescending(b => b.Id)
+        };
+
+        return query;
     }
 }

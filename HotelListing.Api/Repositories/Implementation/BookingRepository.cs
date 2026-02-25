@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HotelListing.Api.Data;
 using HotelListing.Api.Models.Domain;
+using HotelListing.Api.Models.DTOs.Booking;
 using HotelListing.Api.Models.Enums;
 using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Repositories.Extensions;
@@ -41,13 +42,10 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
                 .FirstOrDefaultAsync(b => b.Id == bookingId && b.HotelId == hotelId);
     }
 
-    public async Task<PagedResult<Booking>> GetBookingsForHotelAsync(int hotelId, PaginationParameters parameters)
+    public async Task<PagedResult<Booking>> GetBookingsForHotelAsync(PaginationParameters parameters, IQueryable<Booking> query)
     {
-         return await _db.Bookings
+         return await query
                 .Include(b => b.Hotel)
-                .AsNoTracking()
-                .Where(b => b.HotelId == hotelId)
-                .OrderBy(b => b.CheckIn)
                 .ToPagedResultAsync(parameters);
     }
 
@@ -80,12 +78,12 @@ public class BookingRepository : GenericRepository<Booking>, IBookingsRepository
                 && b.UserId == userId);
     }
 
-    public async Task<PagedResult<Booking>> GetUserBookingsForHotelAsync(int hotelId, string userId, PaginationParameters parameters)
+    public async Task<PagedResult<Booking>> GetUserBookingsForHotelAsync(
+        string userId, PaginationParameters parameters, IQueryable<Booking> query)
     {
-        return await _db.Bookings
+        return await query
             .Include(b => b.Hotel)
-            .AsNoTracking()
-            .Where(b => b.HotelId == hotelId && b.UserId == userId)
+            .Where(b =>  b.UserId == userId)
             .ToPagedResultAsync(parameters);
     }
 

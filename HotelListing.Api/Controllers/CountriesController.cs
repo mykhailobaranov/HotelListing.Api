@@ -1,5 +1,6 @@
 ﻿using HotelListing.Api.Models.Constants;
 using HotelListing.Api.Models.DTOs.Country;
+using HotelListing.Api.Models.Filtering;
 using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -13,9 +14,10 @@ namespace HotelListing.Api.Controllers;
 public class CountriesController(ICountriesService service) : BaseApiController
 {
     [HttpGet]
-    public async Task<ActionResult<PagedResult<GetCountriesDto>>> GetCountries([FromQuery] PaginationParameters parameters)
+    public async Task<ActionResult<PagedResult<GetCountriesDto>>> GetCountries(
+        [FromQuery] PaginationParameters paging, [FromQuery] CountryFilterParameters filters)
     {
-        var result = await service.GetCountriesAsync(parameters);
+        var result = await service.GetCountriesAsync(paging, filters);
         return HandleResult(result);
     }
 

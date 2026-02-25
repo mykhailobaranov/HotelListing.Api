@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HotelListing.Api.Models;
 using HotelListing.Api.Models.DTOs.Country;
+using HotelListing.Api.Models.Filtering;
 using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -9,9 +10,25 @@ namespace HotelListing.Api.Services;
 
 public class CountriesService(ICountriesRepository repository, IMapper mapper) : ICountriesService
 {
-    public async Task<Result<PagedResult<GetCountriesDto>>> GetCountriesAsync(PaginationParameters parameters)
+    public async Task<Result<PagedResult<GetCountriesDto>>> GetCountriesAsync(PaginationParameters paging, CountryFilterParameters filters)
     {
-        var response = await repository.GetAllPagedAsync<GetCountriesDto>(parameters);
+        var query = repository.GetAllAsQueryable();
+
+        if (!string.IsNullOrEmpty(filters.Search))
+        {
+            query = query.Where(c => c.Name.Contains(filters.Search));
+        }
+
+        query = filters.SortBy?.ToLower() switch
+        {
+            "name" => filters.SortDescending
+                ? query.OrderByDescending(x => x.Name)
+                : query.OrderBy(x => x.Name),
+
+            _ => query.OrderBy(x => x.Name)
+        };
+
+        var response = await repository.GetAllPagedAsync<GetCountriesDto>(query, paging);
 
         return Result<PagedResult<GetCountriesDto>>.Success(response);
     }

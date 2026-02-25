@@ -34,6 +34,18 @@ public class GenericRepository<T>(HotelListingDbContext db, IMapper mapper) : IG
         return await query.ToPagedResultAsync(parameters);
     }
 
+    public async Task<PagedResult<TResult>> GetAllPagedAsync<TResult>(IQueryable<T> query, PaginationParameters parameters)
+    {
+        return await query
+            .ProjectTo<TResult>(mapper.ConfigurationProvider)
+            .ToPagedResultAsync(parameters);
+    }
+
+    public IQueryable<T> GetAllAsQueryable()
+    {
+        return db.Set<T>().AsNoTracking();
+    }
+
     public async Task<T?> GetByIdAsync(int id)
     {
         return await db.Set<T>().FindAsync(id);
