@@ -135,7 +135,7 @@ public class BookingService(
         return Result<GetBookingDto>.Success(response);
     }
 
-    public async Task<Result<GetBookingDto>> UpdateBookingAsync(int hotelId, int bookingId, UpdateBookingDto updateDto)
+    public async Task<Result<GetBookingDetailsDto>> UpdateBookingAsync(int hotelId, int bookingId, UpdateBookingDto updateDto)
     {
         var userId = GetUserId();
 
@@ -143,26 +143,26 @@ public class BookingService(
 
         if (overlap)
         {
-            return Result<GetBookingDto>.Conflict("The updated dates overlap with one of your existing bookings.");
+            return Result<GetBookingDetailsDto>.Conflict("The updated dates overlap with one of your existing bookings.");
         }
 
         var booking = await repository.GetUserBookingForHotelTrackedAsync(bookingId, hotelId, userId);
 
         if (booking == null)
         {
-            return Result<GetBookingDto>.NotFound($"Booking with id {bookingId} for hotel {hotelId} was not found or access is denied.");
+            return Result<GetBookingDetailsDto>.NotFound($"Booking with id {bookingId} for hotel {hotelId} was not found or access is denied.");
         }
 
         if (booking.Status == BookingStatus.Cancelled)
         {
-            return Result<GetBookingDto>.Conflict($"Booking with id {bookingId} is cancelled and cannot be updated.");
+            return Result<GetBookingDetailsDto>.Conflict($"Booking with id {bookingId} is cancelled and cannot be updated.");
         }
 
-        var hotel = await hotelsRepository.GetByIdAsync(hotelId);
+        var hotel = await hotelsRepository.GetHotelWithCountryAsync(hotelId);
 
         if (hotel == null)
         {
-            return Result<GetBookingDto>.NotFound($"Hotel with id {hotelId} not found.");
+            return Result<GetBookingDetailsDto>.NotFound($"Hotel with id {hotelId} not found.");
         }
 
         var perNightRate = hotel.PerNightRate;
@@ -177,10 +177,13 @@ public class BookingService(
 
         await repository.UpdateAsync(booking);
 
-        var response = new GetBookingDto(
+        var response = new GetBookingDetailsDto(
             booking.Id,
             booking.HotelId,
             hotel.Name,
+            hotel.Address ?? "Unknown",
+            hotel.Rating,
+            hotel.Country!.Name!,
             booking.CheckIn,
             booking.CheckOut,
             booking.Guests,
@@ -190,7 +193,7 @@ public class BookingService(
             booking.UpdatedAtUtc
             );
 
-        return Result<GetBookingDto>.Success(response);
+        return Result<GetBookingDetailsDto>.Success(response);
     }
 
     public async Task<Result> DeleteBookingAsync(int hotelId, int bookingId)

@@ -64,22 +64,22 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
     }
 
     [HttpPut("{bookingId:int}")]
-    public async Task<ActionResult<GetBookingDto>> UpdateBooking([FromRoute] int hotelId, [FromRoute] int bookingId, [FromBody] UpdateBookingDto updateDto)
+    public async Task<ActionResult<GetBookingDetailsDto>> UpdateBooking([FromRoute] int hotelId, [FromRoute] int bookingId, [FromBody] UpdateBookingDto updateDto)
     {
         var result = await service.UpdateBookingAsync(hotelId, bookingId, updateDto);
         return HandleResult(result);
     }
 
     [HttpDelete("{bookingId:int}")]
-    [Authorize(RoleNames.Admin)]
-    public async Task<ActionResult> DeleteBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
+    [Authorize(Roles = RoleNames.Admin)]
+    public async Task<IActionResult> DeleteBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
     {
         var result = await service.DeleteBookingAsync(hotelId, bookingId);
         return HandleResult(result);
     }
 
     [HttpPut("{bookingId:int}/cancel")]
-    public async Task<ActionResult> CancelBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
+    public async Task<IActionResult> CancelBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
     {
         var result = await service.CancelBookingAsync(hotelId, bookingId);
         return HandleResult(result);
@@ -87,7 +87,7 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
 
     [HttpPut("{bookingId:int}/admin/cancel")]
     [HotelOrSystemAdmin]
-    public async Task<ActionResult<GetBookingDto>> AdminCanelBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
+    public async Task<IActionResult> AdminCanelBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
     {
         var result = await service.AdminUpdateBookingStatusAsync(hotelId, bookingId, BookingStatus.Cancelled);
         return HandleResult(result);
@@ -95,7 +95,7 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
 
     [HttpPut("{bookingId:int}/admin/confirm")]
     [HotelOrSystemAdmin]
-    public async Task<ActionResult<GetBookingDto>> ConfirmBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
+    public async Task<IActionResult> ConfirmBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
     {
         var result = await service.AdminUpdateBookingStatusAsync(hotelId, bookingId, BookingStatus.Confirmed);
         return HandleResult(result);

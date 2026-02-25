@@ -27,7 +27,7 @@ public class CountriesController(ICountriesService service) : BaseApiController
     }
 
     [HttpPost]
-    [Authorize(RoleNames.Admin)]
+    [Authorize(Roles = RoleNames.Admin)]
     public async Task<ActionResult<GetCountryDto>> PostCountry(CreateCountryDto countryDto)
     {
         var result = await service.CreateCountryAsync(countryDto);
@@ -41,7 +41,7 @@ public class CountriesController(ICountriesService service) : BaseApiController
     }
 
     [HttpPut("{id}")]
-    [Authorize(RoleNames.Admin)]
+    [Authorize(Roles = RoleNames.Admin)]
     public async Task<IActionResult> PutCountry(int id, UpdateCountryDto countryDto)
     {
         var result = await service.UpdateCountryAsync(id, countryDto);
@@ -49,7 +49,7 @@ public class CountriesController(ICountriesService service) : BaseApiController
     }
 
     [HttpDelete("{id}")]
-    [Authorize(RoleNames.Admin)]
+    [Authorize(Roles = RoleNames.Admin)]
     public async Task<IActionResult> DeleteCountry(int id)
     {
         var result = await service.DeleteCountryAsync(id);

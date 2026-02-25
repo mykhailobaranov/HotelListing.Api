@@ -13,7 +13,7 @@ public interface IBookingsService
     Task<Result<GetBookingDetailsDto>> GetUserBookingDetailsAsync(int hotelId, int bookingId);
     Task<Result<GetAdminBookingDetailsDto>> GetAdminBookingDetailsAsync(int hotelId, int bookingId);
     Task<Result<GetBookingDto>> CreateBookingAsync(int hotelId, CreateBookingDto createDto);
-    Task<Result<GetBookingDto>> UpdateBookingAsync(int hotelId, int bookingId, UpdateBookingDto updateDto);
+    Task<Result<GetBookingDetailsDto>> UpdateBookingAsync(int hotelId, int bookingId, UpdateBookingDto updateDto);
     Task<Result> CancelBookingAsync(int hotelId, int bookingId);
     Task<Result> AdminUpdateBookingStatusAsync(int hotelId, int bookingId, BookingStatus bookingStatus);
     Task<Result> DeleteBookingAsync(int hotelId, int bookingId);
