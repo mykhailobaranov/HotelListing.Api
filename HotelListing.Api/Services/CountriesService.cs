@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using HotelListing.Api.Models;
+using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Country;
 using HotelListing.Api.Models.Filtering;
 using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Repositories.Interface;
+using Humanizer;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
-
 namespace HotelListing.Api.Services;
 
 public class CountriesService(ICountriesRepository repository, IMapper mapper) : ICountriesService
@@ -103,6 +105,40 @@ public class CountriesService(ICountriesRepository repository, IMapper mapper) :
         {
             return Result.Conflict($"Cannot delete Country with id {id} because it has associated Hotels. Please delete the hotels first.");
         }
+
+        return Result.Success();
+    }
+
+    public async Task<Result> PatchCountryAsync(int id, JsonPatchDocument<UpdateCountryDto> patchDoc)
+    {
+        var country = await repository.GetByIdAsync(id);
+
+        if (country == null)
+        {
+            return Result.NotFound($"Country with id {id} was not found.");
+        }
+
+        var countryDto = mapper.Map<UpdateCountryDto>(country);
+        patchDoc.ApplyTo(countryDto);
+
+        if (countryDto.CountryId != id || countryDto.ShortName.Length > 3 || countryDto.Name.Length > 50)
+        {
+            return Result.BadRequest("Invalid data: route Id must match CountryId, " +
+                "ShortName must be at most 3 characters long, " +
+                "and Name must be at most 50 characters long.");
+        }
+
+        var normalizedName = countryDto.Name.ToLower().Trim();
+        var duplicateExists = await repository.ExistsAsync(c => c.Name.ToLower().Trim() == normalizedName
+                    && c.CountryId != id);
+
+        if (duplicateExists)
+        {
+            return Result.Conflict($"Country with name '{countryDto.Name}' already exists.");
+        }
+
+        mapper.Map(countryDto, country);
+        await repository.UpdateAsync(country);
 
         return Result.Success();
     }

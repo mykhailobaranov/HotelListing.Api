@@ -33,6 +33,6 @@ public class MappingProfile : Profile
 
         CreateMap<CreateCountryDto, Country>();
 
-        CreateMap<UpdateCountryDto, Country>();
+        CreateMap<UpdateCountryDto, Country>().ReverseMap();
     }
 }

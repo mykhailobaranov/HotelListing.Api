@@ -4,6 +4,7 @@ using HotelListing.Api.Models.Filtering;
 using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelListing.Api.Controllers;
@@ -47,6 +48,19 @@ public class CountriesController(ICountriesService service) : BaseApiController
     public async Task<IActionResult> PutCountry(int id, UpdateCountryDto countryDto)
     {
         var result = await service.UpdateCountryAsync(id, countryDto);
+        return HandleResult(result);
+    }
+
+    [HttpPatch("{id}")]
+    [Authorize(Roles = RoleNames.Admin)]
+    public async Task<IActionResult> PatchCountry(int id, [FromBody] JsonPatchDocument<UpdateCountryDto> patchDoc)
+    {
+        if (patchDoc == null)
+        {
+            return BadRequest("Patch document is required.");
+        }
+
+        var result = await service.PatchCountryAsync(id, patchDoc);
         return HandleResult(result);
     }
 
