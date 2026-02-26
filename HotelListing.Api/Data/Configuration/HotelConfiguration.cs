@@ -13,5 +13,13 @@ public class HotelConfiguration : IEntityTypeConfiguration<Hotel>
             .WithMany(c => c.Hotels)
             .HasForeignKey(h => h.CountryId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder
+           .HasIndex(h => h.Name)
+           .HasDatabaseName("IX_Hotels_Name");
+
+        builder
+            .HasIndex(h => new { h.CountryId, h.Rating })
+            .HasDatabaseName("IX_Hotels_CountryId_Rating");
     }
 }
