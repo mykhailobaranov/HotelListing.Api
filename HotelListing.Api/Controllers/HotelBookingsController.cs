@@ -79,14 +79,14 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
         return HandleResult(result);
     }
 
-    [HttpPut("{bookingId:int}/cancel")]
+    [HttpPost("{bookingId:int}/cancel")]
     public async Task<IActionResult> CancelBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
     {
         var result = await service.CancelBookingAsync(hotelId, bookingId);
         return HandleResult(result);
     }
 
-    [HttpPut("{bookingId:int}/admin/cancel")]
+    [HttpPost("{bookingId:int}/admin/cancel")]
     [HotelOrSystemAdmin]
     public async Task<IActionResult> AdminCanelBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
     {
@@ -94,7 +94,7 @@ public class HotelBookingsController(IBookingsService service) : BaseApiControll
         return HandleResult(result);
     }
 
-    [HttpPut("{bookingId:int}/admin/confirm")]
+    [HttpPost("{bookingId:int}/admin/confirm")]
     [HotelOrSystemAdmin]
     public async Task<IActionResult> ConfirmBooking([FromRoute] int hotelId, [FromRoute] int bookingId)
     {

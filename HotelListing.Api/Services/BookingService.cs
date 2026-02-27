@@ -1,4 +1,5 @@
-﻿using HotelListing.Api.Models;
+﻿using AutoMapper;
+using HotelListing.Api.Models;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Booking;
 using HotelListing.Api.Models.Enums;
@@ -13,7 +14,8 @@ namespace HotelListing.Api.Services;
 public class BookingService(
     IBookingsRepository repository,
     IHotelsRepository hotelsRepository,
-    IHttpContextAccessor httpContext
+    IHttpContextAccessor httpContext,
+    IMapper mapper
     ) : IBookingsService
 {
     public async Task<Result<PagedResult<GetBookingDto>>> GetUserBookingsForHotelAsync(int hotelId, PaginationParameters paging, BookingFilterParameters filters)
@@ -30,25 +32,14 @@ public class BookingService(
 
         var userId = GetUserId();
 
-        var bookings = await repository.GetUserBookingsForHotelAsync(userId, paging, query);
+        var pagedBookings = await repository.GetUserBookingsForHotelAsync(userId, paging, query);
 
-        var dto = bookings.Data.Select(b => new GetBookingDto(
-            b.Id,
-            b.HotelId,
-            b.Hotel!.Name,
-            b.CheckIn,
-            b.CheckOut,
-            b.Guests,
-            b.TotalPrice,
-            b.Status.ToString(),
-            b.CreatedAtUtc,
-            b.UpdatedAtUtc
-            ));
+        var bookings = mapper.Map<IEnumerable<GetBookingDto>>(pagedBookings.Data);
 
         var response = new PagedResult<GetBookingDto>
         {
-            Data = dto,
-            Metadata = bookings.Metadata
+            Data = bookings,
+            Metadata = pagedBookings.Metadata
         };
 
         return Result<PagedResult<GetBookingDto>>.Success(response);
@@ -66,25 +57,14 @@ public class BookingService(
 
         query = ApplyFilters(hotelId, filters, query);
 
-        var bookings = await repository.GetBookingsForHotelAsync(paging, query);
+        var pagedBookings = await repository.GetBookingsForHotelAsync(paging, query);
 
-        var dto = bookings.Data.Select(b => new GetBookingDto(
-            b.Id,
-            b.HotelId,
-            b.Hotel!.Name,
-            b.CheckIn,
-            b.CheckOut,
-            b.Guests,
-            b.TotalPrice,
-            b.Status.ToString(),
-            b.CreatedAtUtc,
-            b.UpdatedAtUtc
-            ));
+        var bookings = mapper.Map<IEnumerable<GetBookingDto>>(pagedBookings.Data);
 
         var response = new PagedResult<GetBookingDto>
         {
-            Data = dto,
-            Metadata = bookings.Metadata
+            Data = bookings,
+            Metadata = pagedBookings.Metadata
         };
 
         return Result<PagedResult<GetBookingDto>>.Success(response);
@@ -116,30 +96,14 @@ public class BookingService(
         var nights = createDto.CheckOut.DayNumber - createDto.CheckIn.DayNumber;
         var totalPrice = hotel.PerNightRate * nights;
 
-        var booking = new Booking
-        {
-            HotelId = createDto.HotelId,
-            UserId = userId,
-            CheckIn = createDto.CheckIn,
-            CheckOut = createDto.CheckOut,
-            Guests = createDto.Guests,
-            TotalPrice = totalPrice
-        };
+        var booking = mapper.Map<Booking>(createDto);
+
+        booking.UserId = userId;
+        booking.TotalPrice = totalPrice;
 
         await repository.AddAsync(booking);
 
-        var response = new GetBookingDto(
-            booking.Id,
-            hotel.Id,
-            hotel.Name,
-            booking.CheckIn,
-            booking.CheckOut,
-            booking.Guests,
-            booking.TotalPrice,
-            booking.Status.ToString(),
-            booking.CreatedAtUtc,
-            booking.UpdatedAtUtc
-            );
+        var response = mapper.Map<GetBookingDto>(booking);
 
         return Result<GetBookingDto>.Success(response);
     }
@@ -186,21 +150,8 @@ public class BookingService(
 
         await repository.UpdateAsync(booking);
 
-        var response = new GetBookingDetailsDto(
-            booking.Id,
-            booking.HotelId,
-            hotel.Name,
-            hotel.Address ?? "Unknown",
-            hotel.Rating,
-            hotel.Country!.Name!,
-            booking.CheckIn,
-            booking.CheckOut,
-            booking.Guests,
-            booking.TotalPrice,
-            booking.Status.ToString(),
-            booking.CreatedAtUtc,
-            booking.UpdatedAtUtc
-            );
+        booking.Hotel = hotel;
+        var response = mapper.Map<GetBookingDetailsDto>(booking);
 
         return Result<GetBookingDetailsDto>.Success(response);
     }
@@ -281,21 +232,7 @@ public class BookingService(
             return Result<GetBookingDetailsDto>.NotFound($"Booking with id {bookingId} for hotel {hotelId} was not found or access is denied.");
         }
 
-        var response = new GetBookingDetailsDto(
-            booking.Id,
-            booking.HotelId,
-            booking.Hotel!.Name,
-            booking.Hotel!.Address ?? "Unknown",
-            booking.Hotel!.Rating,
-            booking.Hotel?.Country?.Name ?? "Unknown",
-            booking.CheckIn,
-            booking.CheckOut,
-            booking.Guests,
-            booking.TotalPrice,
-            booking.Status.ToString(),
-            booking.CreatedAtUtc,
-            booking.UpdatedAtUtc
-            );
+        var response = mapper.Map<GetBookingDetailsDto>(booking);
 
         return Result<GetBookingDetailsDto>.Success(response);
     }
@@ -309,20 +246,7 @@ public class BookingService(
             return Result<GetAdminBookingDetailsDto>.NotFound($"Booking with id {bookingId} for hotel {hotelId} was not found or access is denied.");
         }
 
-        var response = new GetAdminBookingDetailsDto(
-            booking.Id,
-            booking.HotelId,
-            booking.Hotel!.Name,
-            booking.User!.FullName,
-            booking.User!.Email ?? "Unknown",
-            booking.CheckIn,
-            booking.CheckOut,
-            booking.Guests,
-            booking.TotalPrice,
-            booking.Status.ToString(),
-            booking.CreatedAtUtc,
-            booking.UpdatedAtUtc
-            );
+        var response = mapper.Map<GetAdminBookingDetailsDto>(booking);
 
         return Result<GetAdminBookingDetailsDto>.Success(response);
     }
