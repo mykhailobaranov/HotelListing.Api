@@ -1,3 +1,4 @@
+using HotelListing.Api.CachePolicies;
 using HotelListing.Api.Data;
 using HotelListing.Api.MappingProfiles;
 using HotelListing.Api.Models.Config;
@@ -88,6 +89,15 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile<MappingProfile>();
 });
 
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("AuthenticatedUserCachingPolicy", options =>
+    {
+        options.AddPolicy<AuthenticatedUserCachingPolicy>()
+        .SetCacheKeyPrefix("authenticated-user-cache-");
+    }, true);
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -98,7 +108,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseOutputCache();
 
 app.MapControllers();
 

@@ -6,15 +6,16 @@ using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace HotelListing.Api.Controllers;
 
 [Route("api/countries")]
 [ApiController]
-[Authorize]
-public class CountriesController(ICountriesService service) : BaseApiController
+public class CountriesController(ICountriesService service, IOutputCacheStore cacheStore) : BaseApiController
 {
     [HttpGet]
+    [OutputCache(Duration = 60, Tags = new[] { "countries" })]
     public async Task<ActionResult<PagedResult<GetCountriesDto>>> GetCountries(
         [FromQuery] PaginationParameters paging, [FromQuery] CountryFilterParameters filters)
     {
@@ -23,6 +24,7 @@ public class CountriesController(ICountriesService service) : BaseApiController
     }
 
     [HttpGet("{id}")]
+    [OutputCache(Duration = 60, Tags = new[] { "countries" })]
     public async Task<ActionResult<GetCountryDto>> GetCountry(int id)
     {
         var result = await service.GetCountryAsync(id);
@@ -31,12 +33,13 @@ public class CountriesController(ICountriesService service) : BaseApiController
 
     [HttpPost]
     [Authorize(Roles = RoleNames.Admin)]
-    public async Task<ActionResult<GetCountryDto>> PostCountry(CreateCountryDto countryDto)
+    public async Task<ActionResult<GetCountryDto>> PostCountry(CreateCountryDto countryDto, CancellationToken cancellationToken)
     {
         var result = await service.CreateCountryAsync(countryDto);
 
         if (result.IsSuccess)
         {
+            await cacheStore.EvictByTagAsync("countries", cancellationToken);
             return CreatedAtAction(nameof(GetCountry), new { id = result.Value!.CountryId }, result.Value);
         }
 
@@ -45,15 +48,19 @@ public class CountriesController(ICountriesService service) : BaseApiController
 
     [HttpPut("{id}")]
     [Authorize(Roles = RoleNames.Admin)]
-    public async Task<IActionResult> PutCountry(int id, UpdateCountryDto countryDto)
+    public async Task<IActionResult> PutCountry(int id, UpdateCountryDto countryDto, CancellationToken cancellationToken)
     {
         var result = await service.UpdateCountryAsync(id, countryDto);
+        if (result.IsSuccess)
+        {
+            await cacheStore.EvictByTagAsync("countries", cancellationToken);
+        }
         return HandleResult(result);
     }
 
     [HttpPatch("{id}")]
     [Authorize(Roles = RoleNames.Admin)]
-    public async Task<IActionResult> PatchCountry(int id, [FromBody] JsonPatchDocument<UpdateCountryDto> patchDoc)
+    public async Task<IActionResult> PatchCountry(int id, [FromBody] JsonPatchDocument<UpdateCountryDto> patchDoc, CancellationToken cancellationToken)
     {
         if (patchDoc == null)
         {
@@ -61,14 +68,22 @@ public class CountriesController(ICountriesService service) : BaseApiController
         }
 
         var result = await service.PatchCountryAsync(id, patchDoc);
+        if (result.IsSuccess)
+        {
+            await cacheStore.EvictByTagAsync("countries", cancellationToken);
+        }
         return HandleResult(result);
     }
 
     [HttpDelete("{id}")]
     [Authorize(Roles = RoleNames.Admin)]
-    public async Task<IActionResult> DeleteCountry(int id)
+    public async Task<IActionResult> DeleteCountry(int id, CancellationToken cancellationToken)
     {
         var result = await service.DeleteCountryAsync(id);
+        if (result.IsSuccess)
+        {
+            await cacheStore.EvictByTagAsync("countries", cancellationToken);
+        }
         return HandleResult(result);
     }
 }
