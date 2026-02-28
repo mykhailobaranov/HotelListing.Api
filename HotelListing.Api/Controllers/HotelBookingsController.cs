@@ -1,4 +1,4 @@
-﻿using HotelListing.Api.AuthorizationFilters;
+using HotelListing.Api.AuthorizationFilters;
 using HotelListing.Api.Models.Constants;
 using HotelListing.Api.Models.DTOs.Booking;
 using HotelListing.Api.Models.Enums;
@@ -7,12 +7,14 @@ using HotelListing.Api.Models.Pagination;
 using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace HotelListing.Api.Controllers;
 
 [Route("api/hotels/{hotelId:int}/bookings")]
 [ApiController]
 [Authorize]
+[EnableRateLimiting("perUser")]
 public class HotelBookingsController(IBookingsService service) : BaseApiController
 {
     [HttpGet]

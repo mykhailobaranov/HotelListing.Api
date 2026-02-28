@@ -6,11 +6,13 @@ using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace HotelListing.Api.Controllers;
 
 [Route("api/hotels")]
 [ApiController]
+[EnableRateLimiting("fixed")]
 public class HotelsController(IHotelsService service, IOutputCacheStore cacheStore) : BaseApiController
 {
     [HttpGet]
