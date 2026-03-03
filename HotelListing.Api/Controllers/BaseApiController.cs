@@ -32,10 +32,26 @@ public class BaseApiController : ControllerBase
     {
         return errorType switch
         {
-            ErrorType.NotFound => NotFound(new { message = error }),
-            ErrorType.BadRequest => BadRequest(new { message = error }),
-            ErrorType.Conflict => Conflict(new { message = error }),
-            _ => StatusCode(500, new { message = error })
+            ErrorType.BadRequest => Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Bad request",
+                detail: error
+            ),
+            ErrorType.NotFound => Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Resource not found",
+                detail: error
+            ),
+            ErrorType.Conflict => Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Conflict",
+                detail: error
+            ),
+            _ => Problem(
+                statusCode: StatusCodes.Status500InternalServerError,
+                title: "Internal server error",
+                detail: error
+            )
         };
     }
 }

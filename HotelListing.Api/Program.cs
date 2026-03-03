@@ -1,6 +1,7 @@
 using HotelListing.Api.CachePolicies;
 using HotelListing.Api.Data;
 using HotelListing.Api.MappingProfiles;
+using HotelListing.Api.Middleware;
 using HotelListing.Api.Models.Config;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Repositories.Implementation;
@@ -105,6 +106,9 @@ try
     builder.Services.AddScoped<IBookingsService, BookingService>();
     builder.Services.AddScoped<IUsersService, UsersService>();
 
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+    builder.Services.AddProblemDetails();
+
     builder.Services.AddAutoMapper(cfg =>
     {
         cfg.AddProfile<MappingProfile>();
@@ -166,6 +170,7 @@ try
 
     var app = builder.Build();
 
+    app.UseExceptionHandler();
 
     app.UseSerilogRequestLogging(options =>
     {
