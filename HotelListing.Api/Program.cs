@@ -63,6 +63,9 @@ try
         .AddRoles<IdentityRole>()
         .AddEntityFrameworkStores<HotelListingDbContext>();
 
+    builder.Services.AddHealthChecks()
+        .AddDbContextCheck<HotelListingDbContext>();
+
     builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
     var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
@@ -219,6 +222,12 @@ try
     app.UseOutputCache();
 
     app.MapControllers();
+
+    app.MapHealthChecks("/healthz");
+    app.MapHealthChecks("/healthz/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = _ => false
+    });
 
     Log.Information("HotelListing API is running");
 
