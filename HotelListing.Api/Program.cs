@@ -119,7 +119,8 @@ try
         }, true);
     });
 
-    builder.Services.AddRateLimiter(options => {
+    builder.Services.AddRateLimiter(options =>
+    {
         options.AddFixedWindowLimiter("fixed", opt =>
         {
             opt.Window = TimeSpan.FromMinutes(1);
@@ -164,6 +165,37 @@ try
     });
 
     var app = builder.Build();
+
+
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000}ms";
+
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("UserName", httpContext.User?.Identity?.Name ?? "anonymous");
+            diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+
+            if (httpContext.User?.Identity?.IsAuthenticated == true)
+            {
+                var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                diagnosticContext.Set("UserId", userId ?? "unknown");
+            }
+        };
+
+        options.GetLevel = (httpContext, elapsed, ex) =>
+        {
+            if (ex != null || httpContext.Response.StatusCode >= 500)
+            {
+                return Serilog.Events.LogEventLevel.Error;
+            }
+            else if (httpContext.Response.StatusCode >= 400)
+            {
+                return Serilog.Events.LogEventLevel.Warning;
+            }
+            return Serilog.Events.LogEventLevel.Information;
+        };
+    });
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())

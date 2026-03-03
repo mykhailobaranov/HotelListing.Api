@@ -3,6 +3,7 @@ using HotelListing.Api.Models;
 using HotelListing.Api.Models.Config;
 using HotelListing.Api.Models.Domain;
 using HotelListing.Api.Models.DTOs.Auth;
+using Humanizer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -18,13 +19,14 @@ public class UsersService(
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole> roleManager,
     IOptions<JwtSettings> jwtOptions,
-    IConfiguration configuration) : IUsersService
+    ILogger<UsersService> logger) : IUsersService
 {
     public async Task<Result<RegisteredUserDto>> RegisterAsync(RegisterUserDto registerUserDto)
     {
         var isRoleExist = await roleManager.RoleExistsAsync(registerUserDto.Role);
         if (!isRoleExist)
         {
+            logger.LogWarning("Registration attempt with unknown role '{Role}'", registerUserDto.Role);
             return Result<RegisteredUserDto>.BadRequest($"Role '{registerUserDto.Role}' doesn't exist.");
         }
 
@@ -41,6 +43,9 @@ public class UsersService(
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+
+            logger.LogWarning("Failed registration attempt for {Email}: {Errors}", registerUserDto.Email, errors);
+
             return Result<RegisteredUserDto>.BadRequest(errors);
         }
 
@@ -67,6 +72,7 @@ public class UsersService(
             Role = registerUserDto.Role,
         };
 
+        logger.LogInformation("User registered successfully: {UserId}", user.Id);
         return Result<RegisteredUserDto>.Success(response);
     }
 
@@ -75,17 +81,20 @@ public class UsersService(
         var user = await userManager.FindByEmailAsync(loginUserDto.Email);
         if (user == null)
         {
+            logger.LogWarning("Failed login attempt for email: {Email}", loginUserDto.Email);
             return Result<string>.BadRequest("Wrong email or password.");
         }
 
         var valid = await userManager.CheckPasswordAsync(user, loginUserDto.Password);
         if (!valid)
         {
+            logger.LogWarning("Failed login attempt for email: {Email}", loginUserDto.Email);
             return Result<string>.BadRequest("Wrong email or password.");
         }
 
         var token = await GenerateToken(user);
 
+        logger.LogInformation("User logged in successfully: {UserId}", user.Id);
         return Result<string>.Success(token);
     }
 
