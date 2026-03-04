@@ -92,6 +92,20 @@ public class HotelsService(
         return Result<GetHotelDto>.Success(response);
     }
 
+    public async Task<Result<GetAdminHotelDto>> AdminGetHotelAsync(int id)
+    {
+        var hotel = await hotelsRepository.GetHotelWithCountryAndAdminsAsync(id);
+
+        if (hotel == null)
+        {
+            return Result<GetAdminHotelDto>.NotFound($"Hotel with id {id} was not found.");
+        }
+
+        var response = mapper.Map<GetAdminHotelDto>(hotel);
+
+        return Result<GetAdminHotelDto>.Success(response);
+    }
+
     public async Task<Result<GetHotelDto>> CreateHotelAsync(CreateHotelDto hotelDto)
     {
         var isExist = await hotelsRepository

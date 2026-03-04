@@ -14,11 +14,15 @@ public class MappingProfile : Profile
 
         CreateMap<Hotel, GetHotelDto>()
             .ForMember(d => d.Country,
-                opt => opt.MapFrom(src => src.Country != null ? src.Country.Name : string.Empty));
+                opt => opt.MapFrom(src => src.Country!.Name));
 
         CreateMap<Hotel, GetHotelsDto>();
 
         CreateMap<Hotel, GetHotelSlimDto>();
+
+        CreateMap<Hotel, GetAdminHotelDto>()
+            .ForCtorParam("Country",
+                opt => opt.MapFrom(src => src.Country!.Name));
 
         CreateMap<CreateHotelDto, Hotel>();
 
@@ -53,5 +57,10 @@ public class MappingProfile : Profile
                 opt => opt.MapFrom(src => src.User!.Email ?? "Unknown"));
 
         CreateMap<CreateBookingDto, Booking>();
+
+
+        // === HOTEL ADMINS ===
+
+        CreateMap<HotelAdmin, GetHotelAdminDto>();
     }
 }

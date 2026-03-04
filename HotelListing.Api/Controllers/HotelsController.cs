@@ -32,6 +32,15 @@ public class HotelsController(IHotelsService service, IOutputCacheStore cacheSto
         return HandleResult(result);
     }
 
+    [HttpGet("{id}/admin")]
+    [OutputCache(Duration = 60, Tags = new[] { "hotels" })]
+    [Authorize(Roles = RoleNames.Admin)]
+    public async Task<ActionResult<GetAdminHotelDto>> GetHotelWithAdmins(int id)
+    {
+        var result = await service.AdminGetHotelAsync(id);
+        return HandleResult(result);
+    }
+
     [HttpPost]
     [Authorize(Roles = RoleNames.Admin)]
     public async Task<ActionResult<GetHotelDto>> PostHotel(CreateHotelDto hotelDto, CancellationToken cancellationToken)

@@ -15,6 +15,15 @@ public class HotelsRepository : GenericRepository<Hotel>, IHotelsRepository
         _db = db;
     }
 
+    public async Task<Hotel?> GetHotelWithCountryAndAdminsAsync(int id)
+    {
+        return await _db.Hotels
+            .Include(q => q.Country)
+            .Include(q => q.Admins)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(q => q.Id == id);
+    }
+
     public async Task<Hotel?> GetHotelWithCountryAsync(int id)
     {
         return await _db.Hotels
