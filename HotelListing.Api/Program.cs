@@ -66,6 +66,14 @@ try
     builder.Services.AddHealthChecks()
         .AddDbContextCheck<HotelListingDbContext>();
 
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowAll",
+            b => b.AllowAnyHeader()
+                  .AllowAnyOrigin()
+                  .AllowAnyMethod());
+    });
+
     builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
     var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
@@ -212,6 +220,8 @@ try
     }
 
     app.UseHttpsRedirection();
+
+    app.UseCors("AllowAll");
 
     app.UseAuthentication();
 
