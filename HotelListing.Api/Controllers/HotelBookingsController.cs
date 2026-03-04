@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using HotelListing.Api.AuthorizationFilters;
 using HotelListing.Api.Models.Constants;
 using HotelListing.Api.Models.DTOs.Booking;
@@ -11,7 +12,8 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace HotelListing.Api.Controllers;
 
-[Route("api/hotels/{hotelId:int}/bookings")]
+[Route("api/v{version:apiVersion}/hotels/{hotelId:int}/bookings")]
+[ApiVersion("1.0")]
 [ApiController]
 [Authorize]
 [EnableRateLimiting("perUser")]

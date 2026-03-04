@@ -81,6 +81,15 @@ public class CountriesService(ICountriesRepository repository, IMapper mapper) :
             return Result.NotFound($"Country with id {id} was not found.");
         }
 
+        var normalizedName = countryDto.Name.ToLower().Trim();
+        var duplicateExists = await repository.ExistsAsync(c => c.Name.ToLower().Trim() == normalizedName
+                    && c.CountryId != id);
+
+        if(duplicateExists)
+        {
+            return Result.Conflict($"Country with name '{countryDto.Name}' already exists.");
+        }
+
         mapper.Map(countryDto, country);
 
         await repository.UpdateAsync(country);

@@ -1,11 +1,13 @@
-﻿using HotelListing.Api.Models.DTOs.Auth;
+﻿using Asp.Versioning;
+using HotelListing.Api.Models.DTOs.Auth;
 using HotelListing.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelListing.Api.Controllers;
 
-[Route("api/auth")]
+[Route("api/v{version:apiVersion}/auth")]
+[ApiVersion("1.0")]
 [ApiController]
 [AllowAnonymous]
 public class AuthController(IUsersService usersService) : BaseApiController

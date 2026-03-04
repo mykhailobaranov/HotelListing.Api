@@ -1,4 +1,5 @@
-﻿using HotelListing.Api.Models.Constants;
+﻿using Asp.Versioning;
+using HotelListing.Api.Models.Constants;
 using HotelListing.Api.Models.DTOs.Hotel;
 using HotelListing.Api.Models.Filtering;
 using HotelListing.Api.Models.Pagination;
@@ -10,7 +11,8 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace HotelListing.Api.Controllers;
 
-[Route("api/hotels")]
+[Route("api/v{version:apiVersion}/hotels")]
+[ApiVersion("1.0")]
 [ApiController]
 [EnableRateLimiting("fixed")]
 public class HotelsController(IHotelsService service, IOutputCacheStore cacheStore) : BaseApiController

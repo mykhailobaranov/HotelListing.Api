@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using HotelListing.Api.CachePolicies;
 using HotelListing.Api.Data;
 using HotelListing.Api.MappingProfiles;
@@ -11,8 +12,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Serilog;
+using Swashbuckle.AspNetCore.Filters;
+using System.Reflection;
 using System.Text;
 using System.Threading.RateLimiting;
 
@@ -179,6 +185,69 @@ try
         };
     });
 
+    builder.Services.AddApiVersioning(options =>
+    {
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.ReportApiVersions = true;
+        options.ApiVersionReader = new UrlSegmentApiVersionReader();
+    })
+    .AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Version = "v1",
+            Title = "Hotel Listing API",
+            Description = "API for managing hotels, countries, and bookings",
+            Contact = new OpenApiContact
+            {
+                Name = "Support Team",
+                Email = "support@hotellisting.com"
+            },
+            License = new OpenApiLicense
+            {
+                Name = "MIT License",
+                Url = new Uri("https://opensource.org/licenses/MIT")
+            }
+        });
+
+        options.SwaggerDoc("v2", new OpenApiInfo
+        {
+            Version = "v2",
+            Title = "Hotel Listing API V2",
+            Description = "Version 2 of the Hotel Listing API with enhanced features"
+        });
+
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+        {
+            options.IncludeXmlComments(xmlPath);
+        }
+
+        options.EnableAnnotations();
+
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
+
+        options.OperationFilter<HotelListing.Api.Filters.SecurityRequirementsOperationFilter>();
+
+        options.OrderActionsBy(apiDesc => $"{apiDesc.RelativePath}_{apiDesc.HttpMethod}");
+    });
+
     var app = builder.Build();
 
     app.UseExceptionHandler();
@@ -217,6 +286,19 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
+        app.UseSwagger();
+        app.UseSwaggerUI(options =>
+        {
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotel Listing API V1");
+            options.SwaggerEndpoint("/swagger/v2/swagger.json", "Hotel Listing API V2");
+            options.RoutePrefix = "swagger";
+            options.DocumentTitle = "Hotel Listing API Documentation";
+            options.DisplayRequestDuration();
+            options.EnableDeepLinking();
+            options.EnableFilter();
+            options.ShowExtensions();
+            options.EnableValidator();
+        });
     }
 
     app.UseHttpsRedirection();
