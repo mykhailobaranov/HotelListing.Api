@@ -41,6 +41,24 @@ During the development of this API, I've transitioned from basic CRUD to a produ
 - **Global Exception Handling:** Centralized middleware to catch unhandled errors and return standardized JSON error responses (Problem Details) without exposing stack traces.
 - **Partial Updates:** Supported `HTTP PATCH` using JSON Patch documents.
 
+## 🌍 Live API Documentation (Swagger)
+The API was successfully deployed to a **Microsoft Azure App Service**. 
+
+👉 **[Test the Live API Here (Swagger UI)](https://hotellistingapi-gsbhaddug8g0dcet.polandcentral-01.azurewebsites.net/swagger/index.html)**
+
+> **Note:** The API is hosted on a free Azure F1 tier. If it hasn't been accessed recently, the first request may take 15-20 seconds to wake up the server. Additionally, this link is part of a 30-day trial and may become inactive in the future. See the screenshots below for proof of deployment.
+
+Below is a snapshot of the live Swagger UI in production:
+<img width="1665" height="1048" alt="image" src="https://github.com/user-attachments/assets/8a6cd42f-7d01-4086-a29f-b2e4d12d086c" />
+
+
+## 🚀 CI/CD Pipeline & Deployment
+This project implements a fully automated CI/CD pipeline using **GitHub Actions**. 
+Every push to the `master` branch triggers a workflow that automatically builds the .NET 9.0 application and deploys it to Azure.
+
+<img width="801" height="234" alt="image" src="https://github.com/user-attachments/assets/6d76f44c-9ef2-4ed4-b333-21d1dd34b4d7" />
+
+
 ## 🛠️ How to Run (Locally)
 
 1. Clone the repository.
